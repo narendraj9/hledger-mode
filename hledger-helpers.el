@@ -25,6 +25,8 @@
 
 ;;; Code:
 
+(require 'popup)
+
 (defun hledger-ret-command ()
   "Commands run on <return> in hledger-mode."
   (interactive)
@@ -55,6 +57,22 @@
     (hledger-jentry)
     (insert entries)
     (format "Fetched entries appended.")))
+
+(defmacro hledger-as-command (name command)
+  "Wrapper macro for interactive key bindings."
+  `(defun ,(intern (symbol-name name)) () (interactive)
+     (hledger-run-command ,command)))
+
+(defun hledger-show-view-mode-help ()
+  "Show help in hledger view mode."
+  (interactive)
+  (let ((result ""))
+    (map-keymap (lambda (k v) (when (characterp k)
+                                (setq result
+                                      (concat result
+                                              (format "%c %s\n" k v)))))
+                (current-local-map))
+    (popup-tip result :margin t)))
 
 (provide 'hledger-helpers)
 ;;; hledger-helpers.el ends here

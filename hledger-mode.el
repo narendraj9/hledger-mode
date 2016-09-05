@@ -7,7 +7,7 @@
 ;; URL: 
 ;; Version: 0.1
 ;; Keywords: hledger
-;; Package-Requires: ((json "1.4"))
+;; Package-Requires: ((json "1.4") (popup "0.5.3"))
 
 ;;; Commentary:
 ;;
@@ -66,11 +66,17 @@
 
 (defvar hledger-view-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c q") 'hledger-kill-reporting-window)
-    (define-key map (kbd "C-c w") 'hledger-copy-to-clipboard)
-    (define-key map (kbd "C-c <") 'hledger-prev-report)
-    (define-key map (kbd "C-c >") 'hledger-next-report)
-    (define-key map (kbd "C-c .") 'hledger-present-report)
+    (define-key map (kbd "q") 'hledger-kill-reporting-window)
+    (define-key map (kbd "h") 'hledger-show-view-mode-help)
+    (define-key map (kbd "w") 'hledger-copy-to-clipboard)
+    (define-key map (kbd "<") 'hledger-prev-report)
+    (define-key map (kbd ">") 'hledger-next-report)
+    (define-key map (kbd ".") 'hledger-present-report)
+    (define-key map (kbd "d") (hledger-as-command hledger-daily "daily"))
+    (define-key map (kbd "m") (hledger-as-command hledger-monthly "monthly"))
+    (define-key map (kbd "o") (hledger-as-command hledger-overall "overall"))
+    (define-key map (kbd "b") (hledger-as-command balancesheet "balancesheet"))
+    (define-key map (kbd "i") (hledger-as-command incomestatement "incomestatement"))
     map))
 
 (defconst hledger-font-lock-keywords-1
@@ -110,7 +116,7 @@
   (hledger-mode-init))
 
 ;;;###autoload
-(define-derived-mode hledger-view-mode prog-mode "HLedger View" ()
+(define-derived-mode hledger-view-mode special-mode "HLedger View" ()
   "Major mode for viewing hledger reports. I have a separate major mode
 so that the key bindings are not shared between buffers that are used for
 viewing reports and the journal file. I require the same kind of syntax
