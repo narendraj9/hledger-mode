@@ -322,7 +322,8 @@ To configure this, see `hledger-reporting-day'."
     (with-current-buffer (hledger-get-perfin-buffer t)
       (goto-char (point-min))
       (insert (hledger-generate-report-header beg-time end-time))
-      (insert "Cashflow\n========\n")
+      (insert (concat "Income Statement\n"
+                      "================\n"))
       (let ((beg (point)))
         (while (not (looking-at "--"))
           (forward-line))
@@ -341,7 +342,7 @@ To configure this, see `hledger-reporting-day'."
   (let* ((beg-time (time-subtract (current-time) (days-to-time (* 4 31))))
          (beg-time-string (hledger-format-time beg-time))
          (end-time-string (hledger-format-time (current-time))))
-    (hledger-jdo (format "balance expenses income --depth 2 -META -b %s -e %s"
+    (hledger-jdo (format "balance expenses income --depth 2 -MTA -b %s -e %s"
                          beg-time-string
                          end-time-string)
                  keep-bufferp
@@ -363,7 +364,7 @@ To configure this, see `hledger-reporting-day'."
         (reverse-region beg (point)))
       (goto-char (point-max))
       (insert "\nExpanded Running Report\n=======================\n\n"))
-    (hledger-jdo (format "balance expenses income --tree -META -b %s -e %s"
+    (hledger-jdo (format "balance expenses income --tree -MTA -b %s -e %s"
                          beg-time-string
                          end-time-string)
                  t
