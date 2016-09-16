@@ -333,7 +333,7 @@ To configure this, see `hledger-reporting-day'."
       ;; Back to the start
       (goto-char (point-min))
       (when bury-bufferp
-        (bury-buffer)))))
+        (bury-buffer))))
 
 (defun hledger-running-report (&optional keep-bufferp bury-bufferp)
   "Show the balance report for the past 5 months."
