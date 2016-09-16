@@ -149,6 +149,7 @@ inefficient."
      `(lambda ()
         (message "Started the new emacs process.")
         (setq load-path (quote ,load-path))
+        (setq hledger-jfile ,hledger-jfile)
         (message "--> Loading hledger-mode.")
         (require 'hledger-mode)
         ;; This requires secrets. So, we don't do anything if there is

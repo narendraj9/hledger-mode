@@ -42,13 +42,25 @@
   :group 'hledger
   :type 'string)
 
+(defcustom hledger-ratios-assets-accounts
+  "assets"
+  "Account names for total assets."
+  :group 'hledger
+  :type 'string)
+
+(defcustom hledger-ratios-income-accounts
+  "income"
+  "Account names for total income so far."
+  :group 'hledger
+  :type 'string)
+
 (defcustom hledger-ratios-liquid-asset-accounts
   "assets:bank assets:wallet"
   "Account names [separated by spaces] that contain your liquid assets"
   :group 'hledger
   :type 'string)
 
-(defcustom hledger-ratios-nondiscritionary-expense-accounts
+(defcustom hledger-ratios-essential-expense-accounts
   "expenses:housing expenses:eating expenses:family"
   "Account names [separated by spaces] that contain non-disctrionary expenses"
   :group 'hledger
@@ -227,9 +239,9 @@ for the buffer contents. "
       (call-process-shell-command jcommand nil t nil)
       (if bury-bufferp
           (bury-buffer jbuffer)
-        (pop-to-buffer jbuffer))
+        (pop-to-buffer jbuffer)
+        (delete-other-windows))
       (goto-char (point-min))
-      (end-of-line)
       (setq header-line-format
             (format "Generated on: %s | %s"
                     (hledger-friendlier-time (current-time))
@@ -272,6 +284,25 @@ complete incomestatement isn't much useful for me. "
                            beg-time-string
                            end-time-string))
       (goto-char (point-min))
+      ;; Sort revenues
+      (when (search-forward "Revenues:")
+        (forward-line)
+        (unless (looking-at "--")
+          (let ((beg (point)))
+            (while (not (looking-at "--"))
+              (forward-line))
+            (sort-numeric-fields 2 beg (point))
+            (reverse-region beg (point)))))
+      ;; Same thing again. Need to abstract this sorting stuff. 
+      (when (search-forward "Expenses:")
+        (forward-line)
+        (unless (looking-at "--")
+          (let ((beg (point)))
+            (while (not (looking-at "--"))
+              (forward-line))
+            (sort-numeric-fields 2 beg (point))
+            (reverse-region beg (point)))))
+      (goto-char (point-min))
       (insert (hledger-generate-report-header beg-time end-time)))))
 
 (defun hledger-monthly-report (&optional keep-bufferp bury-bufferp)
@@ -283,7 +314,7 @@ To configure this, see `hledger-reporting-day'."
          (end-time (hledger-nth-of-this-month hledger-reporting-day))
          (beg-time-string (hledger-format-time beg-time))
          (end-time-string (hledger-format-time end-time)))
-    (hledger-jdo (format "balance expenses income --flat -b %s -e %s"
+    (hledger-jdo (format "balance expenses income -b %s -e %s --depth 2"
                          beg-time-string
                          end-time-string)
                  keep-bufferp
@@ -298,26 +329,7 @@ To configure this, see `hledger-reporting-day'."
         (sort-numeric-fields 2 beg (point))
         (reverse-region beg (point)))
       (forward-line 2)
-      (insert "\nExpenses\n========\n"))
-    (hledger-jdo (format "balance expenses --depth 2 --flat -b %s -e %s"
-                         beg-time-string
-                         end-time-string)
-                 t
-                 bury-bufferp)
-    (with-current-buffer (hledger-get-perfin-buffer t)
-      (goto-char (point-min))
-      (while (not (looking-at "Expenses"))
-        (forward-line))
-      (forward-line 2)
-      ;; Sorting and add trailing newlines
-      (let ((beg (point)))
-        (while (not (looking-at "--"))
-          (forward-line))
-        (sort-numeric-fields 2 beg (point))
-        (forward-line 2)
-        (insert "\n\n")
-        (forward-line -4)
-        (reverse-region beg (point)))
+      (insert "\n\n"))
       ;; Back to the start
       (goto-char (point-min))
       (when bury-bufferp
@@ -357,11 +369,44 @@ To configure this, see `hledger-reporting-day'."
                  t
                  bury-bufferp)))
 
+(defun hledger-compute-total (accounts-string &optional beg  end)
+  "Computes the total for given accounts.
+This function depends upon how `hledger-bin' prints data to the console.
+If that changes, things will break. BEG and END are dates."
+  (let* ((date-now (hledger-end-date (current-time)))
+         (output (hledger-shell-command-to-string
+                  (concat " balance "
+                          accounts-string
+                          (if beg (concat " --begin " beg) "") 
+                          " --end " (or end date-now)
+                          " --depth 1"))))
+    (string-to-number (nth 1 (split-string output)))))
+
+(defun hledger-compute-totals (accounts-list &optional beg end)
+  "Computes the total for a list of accounts. See `hledger-compute-total'."
+  (let* ((date-now (hledger-end-date (current-time)))
+         (output (hledger-shell-command-to-string
+                  (concat " balance "
+                          (mapconcat 'identity accounts-list " ")
+                          (if beg (concat " --begin " beg) "") 
+                          " --end " (or end date-now)
+                          " --depth 1"
+                          " --format '\"%(account)\" %(total)' ")))
+         (elisp-string (concat "("
+                               (replace-regexp-in-string
+                                (concat hledger-currency-string
+                                        "\\|-")
+                                ""
+                                output)
+                               ")"))
+         (result (car (read-from-string elisp-string))))
+    result))
+
 (defun hledger-generate-ratios ()
   "Computes various personal finance ratios:
 
 Computes the emergency fund ratio for the current month.
-EFR = (Current liquid assets)/(Monthly nondiscretionary expenses)
+EFR = (Current liquid assets)/(Monthly essential expenses)
 
 I consider expenses on housing, eating and family to be
 non-discretionary. Shoot for keeping it 6. Too high isn't
@@ -379,66 +424,82 @@ three times.
 
 "
   (interactive)
-  (let* ((assets-report-output
-          (hledger-shell-command-to-string
-           (concat " balance "
-                   hledger-ratios-liquid-asset-accounts
-                   " --end " (hledger-end-date (current-time))
-                   " --depth 1")))
-         (expenses-report-output
-          (hledger-shell-command-to-string
-           (concat " balance "
-                   hledger-ratios-nondiscritionary-expense-accounts
-                   " --depth 1 "
-                   " --begin " (hledger-format-time (hledger-nth-of-mth-month
-                                                     hledger-reporting-day
-                                                     -12))
-                   " --end " (hledger-end-date (hledger-nth-of-this-month
-                                                   hledger-reporting-day)))))
-         (liabilities-report-output
-          (hledger-shell-command-to-string
-           (concat " balance "
-                   " --end " (hledger-end-date (current-time))
-                   " --depth 1 "
-                   hledger-ratios-debt-accounts)))
-         (assets (string-to-number (nth 1 (split-string assets-report-output))))
-         (expenses (/ (string-to-number (nth 1 (split-string expenses-report-output)))
-                      12))
-         (liabilities (- (string-to-number (nth 1 (split-string liabilities-report-output))))))
-    (list 'avg-expenses (* expenses 1.0)        ;; Average expenses
-                                                ;; over the past one
-                                                ;; year
-          'efr (/ assets (* expenses 1.0))      ;; Emergency fund ratio
-          'cr  (/ assets (* liabilities 1.0))   ;; Current ratio
-          'dr (/ liabilities (* assets 1.0))))) ;; Debt ratio
+  (let* ((date-now (hledger-end-date (current-time)))
+         (reporting-date-an-year-ago (hledger-format-time (hledger-nth-of-mth-month
+                                                           hledger-reporting-day
+                                                           -12)))
+         (reporting-date-now (hledger-end-date (hledger-nth-of-this-month
+                                                hledger-reporting-day)))
+
+         (totals-plist-1 (hledger-compute-totals
+                          (list hledger-ratios-assets-accounts
+                                hledger-ratios-income-accounts
+                                hledger-ratios-essential-expense-accounts)
+                          reporting-date-an-year-ago
+                          reporting-date-now))
+         ;; For average balances
+         (total-assets
+          (lax-plist-get totals-plist-1
+                         (hledger-get-top-level-acount hledger-ratios-assets-accounts)))
+         (total-income
+          (lax-plist-get totals-plist-1
+                         (hledger-get-top-level-acount hledger-ratios-income-accounts)))
+         (total-expenses
+          (lax-plist-get totals-plist-1
+                         (hledger-get-top-level-acount hledger-ratios-essential-expense-accounts)))
+         ;; For current balances
+         (totals-plist-2 (hledger-compute-totals
+                          (list hledger-ratios-liquid-asset-accounts
+                                hledger-ratios-debt-accounts)))
+         (liquid-assets
+          (lax-plist-get totals-plist-2
+                         (hledger-get-top-level-acount hledger-ratios-liquid-asset-accounts)))
+         (liabilities
+          (lax-plist-get totals-plist-2
+                         (hledger-get-top-level-acount hledger-ratios-debt-accounts)))
+         (monthly-expenses (/ total-expenses 12))
+         (monthly-income (/ total-income 12.0))
+         (monthly-savings (/ total-assets 12.0)))
+    (list 'avg-income (* monthly-income 1.0)              ;; Monthly income
+          'avg-expenses (* monthly-expenses 1.0)          ;; Average expenses
+          'efr (/ liquid-assets (* monthly-expenses 1.0)) ;; Emergency-fund-ratio
+          'cr  (/ liquid-assets (* liabilities 1.0))      ;; Current ratio
+          'sr  (/ monthly-savings monthly-income)         ;; Savings ratio
+          'dr (/ liabilities (* liquid-assets 1.0)))))    ;; Debt ratio
+
 
 (defun hledger-overall-report ()
   "A combination of all the relevant reports."
   (interactive)
-  (hledger-running-report nil t)
-  (hledger-monthly-report t t)
-  (with-current-buffer (hledger-get-perfin-buffer t)
-    (let* ((ratios (hledger-generate-ratios))
-           (efr (plist-get ratios 'efr))
-           (cr (plist-get ratios 'cr))
-           (dr (plist-get ratios 'dr))
-           (avg-expenses (plist-get ratios 'avg-expenses)))
-      (goto-char (point-min))
-      (forward-line 2)
-      (insert (format "
+  (message "Generating overall report...")
+  (let ((inhibit-read-only t))
+    (hledger-running-report nil t)
+    (hledger-monthly-report t t)
+    (with-current-buffer (hledger-get-perfin-buffer t)
+      (let* ((ratios (hledger-generate-ratios))
+             (efr (plist-get ratios 'efr))
+             (cr (plist-get ratios 'cr))
+             (dr (plist-get ratios 'dr))
+             (sr (plist-get ratios 'sr))
+             (avg-income (plist-get ratios 'avg-income))
+             (avg-expenses (plist-get ratios 'avg-expenses)))
+        (goto-char (point-min))
+        (forward-line 2)
+        (insert (format "
 ╔══════════════════════════════════════╦══════════════════════════════════════════╗ 
 
-   Emergency Fund Ratio: %-18.2fAverage Expenses: ₹ %.0f/month           
-   Current Ratio: %-25.2fAverage Cashflow: ₹ %.0f/month        
-   Debt Ratio: %.2f                        
+   Emergency Fund Ratio: %-18.2fSavings Ratio: %.2f
+   Current Ratio: %-25.2fAverage Income: ₹ %.0f/month                        
+   Debt Ratio: %-28.2fAverage Expenses: ₹ %.0f/month           
 
 ╚══════════════════════════════════════╩══════════════════════════════════════════╝
                                                                
 "                                                             
-                      efr avg-expenses
-                      cr  0
-                      dr)))                             
-    (goto-char (point-min))))
+                        efr sr
+                        cr  avg-income
+                        dr  avg-expenses)))                             
+      (goto-char (point-min))))
+  (message "Done!"))
 
 (defun hledger-run-command-for-month (m command)
   "Runs an hledger COMMAND for Mth month.
@@ -513,6 +574,10 @@ See `hledger-prev-report'."
     (set-text-properties (point-min)
                          (point-max)
                          '(read-only t front-sticky t))))
+
+(defun hledger-get-top-level-acount (acc-string)
+  "Returns the top-level account from ACC-STRING."
+  (car (split-string acc-string ":")))
 
 (provide 'hledger-reports)
 ;;; hledger-reports.el ends here

@@ -72,11 +72,14 @@
     (define-key map (kbd "<") 'hledger-prev-report)
     (define-key map (kbd ">") 'hledger-next-report)
     (define-key map (kbd ".") 'hledger-present-report)
-    (define-key map (kbd "d") (hledger-as-command hledger-daily "daily"))
-    (define-key map (kbd "m") (hledger-as-command hledger-monthly "monthly"))
-    (define-key map (kbd "o") (hledger-as-command hledger-overall "overall"))
-    (define-key map (kbd "b") (hledger-as-command balancesheet "balancesheet"))
     (define-key map (kbd "i") (hledger-as-command incomestatement "incomestatement"))
+    (define-key map (kbd "m") (hledger-as-command monthly-report "monthly"))
+    (define-key map (kbd "o") (hledger-as-command overall-report "overall"))
+    (define-key map (kbd "d") (hledger-as-command daily-report "daily"))
+    (define-key map (kbd "b") (hledger-as-command balancesheet "balancesheet"))
+    (define-key map (kbd "j") (defun run-command(c)
+                                (interactive "sCommand: ")
+                                (hledger-run-command c)))
     map))
 
 (defconst hledger-font-lock-keywords-1
