@@ -12,9 +12,18 @@ To make `hledger-mode` available to your Emacs add it to `load-path`:
 (add-to-list 'load-path "/path/to/hledger-mode/dir/")
 (require 'hledger-mode)
 
+;;; Basic configuration
 ;; Provide the path to you journal file. 
 ;; The default location is too opinionated.
 (setq hledger-jfile "/path/to/your/journal-file.journal")
+
+
+;;; Auto-completion for account names
+;; For company-mode users, 
+(add-to-list 'company-backends 'company-hledger)
+
+;; For auto-complete users, 
+(add-to-list 'ac-modes 'hledger-mode)
 
 ```
 
@@ -45,6 +54,12 @@ Once you have done so, you can enable monthly email reporting on
 (hledger-enable-reporting)
 
 ```
+
+You are welcome to use the web application hosted
+at [vicarie.in](https://services.vicarie.in) for logging data while
+you are away from computer. You can use the command
+`hledger-fetch-entries` later on to get those entries into your
+journal file.
 
 
 
