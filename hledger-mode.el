@@ -128,6 +128,8 @@ highlighting in both kinds of buffers."
   (setq-local font-lock-defaults hledger-font-lock-defaults)
   ;; Highlight current line for better readability
   (hl-line-mode 1)
+  ;; Avoid wrapping lines in reports
+  (setq truncate-lines t)
   (use-local-map hledger-view-mode-map))
 
 (provide 'hledger-mode)

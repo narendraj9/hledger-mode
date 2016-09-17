@@ -39,7 +39,7 @@
 
 
 (defcustom hledger-running-report-months
-  5
+  6
   "Number of months to show in the running report."
   :group 'hledger
   :type 'number)
