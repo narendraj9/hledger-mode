@@ -30,11 +30,19 @@
 (defconst hledger-jcompletions '("balancesheet"
                                  "daily"
                                  "incomestatement"
-                                 "monthly"
                                  "overall"
-                                 "print" "accounts" "balancesheet" "balance"
+                                 "print"
+                                 "accounts"
+                                 "balance"
                                  "register")
   "Commands that can be passed to `hledger-jdo` function defined below.")
+
+
+(defcustom hledger-running-report-months
+  5
+  "Number of months to show in the running report."
+  :group 'hledger
+  :type 'number)
 
 (defcustom hledger-daily-report-accounts
   "expenses"
@@ -199,7 +207,6 @@ FIXME: Query emacs for the keys for the functions."
     (pcase command
       (`"incomestatement" (hledger-monthly-incomestatement))
       (`"daily" (hledger-daily-report))
-      (`"monthly" (hledger-monthly-report))
       (`"overall" (hledger-overall-report)
        (pop-to-buffer hledger-reporting-buffer-name)
        (delete-other-windows))
@@ -224,9 +231,13 @@ Returns the buffer with the info inserted.
 If KEEP-BUFFERP is non-nil, it won't erase the old contents. New
 info would be prepended to the old one.
 
-If BURY-BUFFERP is t, the `hledger-reporting-buffer-name' buffer would not be
-showm to the user, this is user for using this function in elisp only
-for the buffer contents. "
+If BURY-BUFFERP is t, the `hledger-reporting-buffer-name' buffer
+would not be showm to the user, this is user for using this
+function in elisp only for the buffer contents.
+
+The position of point remains unaltered after this function
+call. This is for letting the caller transform the output more
+easily."
   (if (eq major-mode 'hledger-mode)
       (setq-local hledger-jfile (buffer-file-name)))
   (let ((jbuffer (hledger-get-perfin-buffer keep-bufferp))
@@ -236,12 +247,14 @@ for the buffer contents. "
                           command
                           " --end " (hledger-end-date (current-time)))))
     (with-current-buffer jbuffer
-      (call-process-shell-command jcommand nil t nil)
+      (let ((here (point)))
+        (call-process-shell-command jcommand nil t nil)
+        ;; Keep the pointer where it was before executing the hledger command
+        (goto-char here))      
       (if bury-bufferp
           (bury-buffer jbuffer)
         (pop-to-buffer jbuffer)
         (delete-other-windows))
-      (goto-char (point-min))
       (setq header-line-format
             (format "Generated on: %s | %s"
                     (hledger-friendlier-time (current-time))
@@ -270,7 +283,7 @@ See `hledger-daily-report-accounts'."
                     "===============\n"))
     (goto-char (point-min))))
 
-(defun hledger-monthly-incomestatement ()
+(defun hledger-monthly-incomestatement (&optional hide-header-p)
   "Incomestatement report but monthly.  You can have move back
 and forth in time in the personal finance buffer. I feel that the
 complete incomestatement isn't much useful for me. "
@@ -280,10 +293,13 @@ complete incomestatement isn't much useful for me. "
          (beg-time-string (hledger-format-time beg-time))
          (end-time-string (hledger-format-time end-time)))
     (with-current-buffer (hledger-get-perfin-buffer)
+      (when (not hide-header-p)
+        (insert (hledger-generate-report-header beg-time end-time))
+        (forward-line 2))
       (hledger-jdo (format "incomestatement --flat -b %s -e %s --depth 2"
                            beg-time-string
-                           end-time-string))
-      (goto-char (point-min))
+                           end-time-string)
+                   t)
       ;; Sort revenues
       (when (search-forward "Revenues:")
         (forward-line)
@@ -302,47 +318,19 @@ complete incomestatement isn't much useful for me. "
               (forward-line))
             (sort-numeric-fields 2 beg (point))
             (reverse-region beg (point)))))
-      (goto-char (point-min))
-      (insert (hledger-generate-report-header beg-time end-time)))))
-
-(defun hledger-monthly-report (&optional keep-bufferp bury-bufferp)
-  "Build the monthly report.
-I make reports from 15th of the Month to 15th of the next month.
-To configure this, see `hledger-reporting-day'."
-  (interactive)
-  (let* ((beg-time (hledger-nth-of-prev-month hledger-reporting-day))
-         (end-time (hledger-nth-of-this-month hledger-reporting-day))
-         (beg-time-string (hledger-format-time beg-time))
-         (end-time-string (hledger-format-time end-time)))
-    (hledger-jdo (format "balance expenses income -b %s -e %s --depth 2"
-                         beg-time-string
-                         end-time-string)
-                 keep-bufferp
-                 bury-bufferp)
-    (with-current-buffer (hledger-get-perfin-buffer t)
-      (goto-char (point-min))
-      (insert (hledger-generate-report-header beg-time end-time))
-      (insert (concat "Income Statement\n"
-                      "================\n"))
-      (let ((beg (point)))
-        (while (not (looking-at "--"))
-          (forward-line))
-        (sort-numeric-fields 2 beg (point))
-        (reverse-region beg (point)))
-      (forward-line 2)
-      (insert "\n\n"))
-      ;; Back to the start
-      (goto-char (point-min))
-      (when bury-bufferp
-        (bury-buffer))))
+      (goto-char (point-max))
+      (insert "\n\n"))))
 
 (defun hledger-running-report (&optional keep-bufferp bury-bufferp)
   "Show the balance report for the past 5 months."
   (interactive)
-  (let* ((beg-time (time-subtract (current-time) (days-to-time (* 4 31))))
-         (beg-time-string (hledger-format-time beg-time))
-         (end-time-string (hledger-format-time (current-time))))
-    (hledger-jdo (format "balance expenses income --depth 2 -MTA -b %s -e %s"
+  (let* ((beg-time-string (hledger-format-time (hledger-nth-of-mth-month
+                                                hledger-reporting-day
+                                                (- hledger-running-report-months))))
+         (end-time-string (hledger-format-time (hledger-nth-of-mth-month
+                                                hledger-reporting-day
+                                                0))))
+    (hledger-jdo (format "balance expenses income --depth 2 -A -p 'every 31 days from %s to %s'"
                          beg-time-string
                          end-time-string)
                  keep-bufferp
@@ -353,7 +341,6 @@ To configure this, see `hledger-reporting-day'."
       (delete-other-windows))
     ;; Let's sort according to the average column now
     (with-current-buffer (hledger-get-perfin-buffer t)
-      (goto-char (point-min))
       (while (not (looking-at "=="))
         (forward-line))
       (forward-line)
@@ -364,7 +351,7 @@ To configure this, see `hledger-reporting-day'."
         (reverse-region beg (point)))
       (goto-char (point-max))
       (insert "\nExpanded Running Report\n=======================\n\n"))
-    (hledger-jdo (format "balance expenses income --tree -MTA -b %s -e %s"
+    (hledger-jdo (format "balance expenses income --tree -A -p 'every 31 days from %s to %s'"
                          beg-time-string
                          end-time-string)
                  t
@@ -474,8 +461,8 @@ three times.
   (interactive)
   (message "Generating overall report...")
   (let ((inhibit-read-only t))
-    (hledger-running-report nil t)
-    (hledger-monthly-report t t)
+    (hledger-monthly-incomestatement)
+    (hledger-running-report t t)
     (with-current-buffer (hledger-get-perfin-buffer t)
       (let* ((ratios (hledger-generate-ratios))
              (efr (plist-get ratios 'efr))
