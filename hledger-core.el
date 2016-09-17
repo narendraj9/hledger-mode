@@ -39,8 +39,10 @@
   :group 'hledger
   :type 'integer)
 
-(defvar hledger-currency-string "₹"
-  "String to be used for currency. Assumes it is prefixed.")
+(defcustom hledger-currency-string "₹"
+  "String to be used for currency. Assumes it is prefixed."
+  :group 'hledger
+  :type 'integer)
 
 ;;; Regexes
 (defvar hledger-empty-regex "^\\s-*$"
