@@ -5,7 +5,7 @@ A mode for writing hledger journals with a set of useful reports.
 
 ## Installation
 
-To make `hledger-mode` available to your Emacs add it `load-path`:
+To make `hledger-mode` available to your Emacs add it to `load-path`:
 
 ```elisp 
 
@@ -20,7 +20,7 @@ To make `hledger-mode` available to your Emacs add it `load-path`:
 
 ## Usage
 
-I recommend that the following setup:
+I recommend the following key bindings:
 
 ```elisp
 
@@ -34,7 +34,11 @@ Once you are in a report buffer after executing a command with
 `hledger-run-command`, press `h` to see the list of reports that you
 can have a look at.
 
-To enable email reporting, you would need to setup your email api credentials. You can set those up with `M-x custize-group hledger`. Once you have done so, you can enable monthly email reporting on `hledger-reporting-day` with the following:
+To enable email reporting, you would need to setup your email api
+credentials. You can set those up with `M-x customize-group hledger`. 
+
+Once you have done so, you can enable monthly email reporting on
+`hledger-reporting-day` with the following in your `init.el`:
 
 ```elisp
 
