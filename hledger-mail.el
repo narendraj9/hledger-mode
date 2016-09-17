@@ -4,7 +4,6 @@
 
 ;; Author: Narendra Joshi <narendraj9@gmail.com>
 ;; Keywords: comm, convenience
-;; Package-Requires: ((utils "0.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -28,7 +27,6 @@
 
 (require 'hledger-core)
 (require 'hledger-reports)
-(require 'utils) 
 
 (defcustom hledger-reporting-buffer-name "*Personal Finance*"
   "Name of the buffer for showing or working with reports."
@@ -80,6 +78,91 @@ I am not checking the range. You are own your own. "
   "The next time beyond which we must update this variable.
 It is updated after an email has been sent to the user.")
 
+
+(defun hledger-make-multipart-boundary ()
+  "Make the boundary for multipart/form-data
+.Creates some slightly unprobably gibberish."
+  (concat "x" (make-string 18 ?-) (format "%x" (random 99999999999))))
+
+(defun hledger-make-multipart-url-data (boundary params)
+  "Construct a multipart/form-data body string with BOUNDARY and PARAMS."
+  (concat
+   (mapconcat (lambda (kv)
+                (let* ((name (format "%s" (car kv)))
+                       (value (cdr kv))
+                       (encoded-value (encode-coding-string value 'utf-8)))
+                  (concat (concat "--" boundary) "\n"
+                          "Content-Disposition: form-data; "
+                          "name=\"" name "\"\n\n"
+                          encoded-value "\n")))
+              params
+              "")
+   "--" boundary "--\n"))
+
+(defun hledger-send-email-with-mailgun (url headers)
+ "Send email using Mailgun.
+
+Returns a boolean value stating if the operation failed or succeeded. 
+t => success nil => failure
+
+This function emulates the curl command as available in the Mailgun Docs:
+curl -s --user USER-AND-PASSWD URL 
+ -F FROM='Excited User <excited@samples.mailgun.org>' \
+ -F TO='devs@mailgun.net' \
+ -F SUBJECT='Hello' \
+ -F TEXT='Testing some Mailgun awesomeness!'
+
+HEADERS is an assoc-list with the headers of the request.
+`((authorization . AUTHORIZATION)
+  (from . FROM)
+  (to   . TO)
+  (subject . SUBJECT)
+  (text . TEXT))
+"
+(let* ((multipart-boundary (hledger-make-multipart-boundary))
+         (url-request-method "POST")
+         (url-request-extra-headers
+          `(("Content-Type" . ,(format
+                                "multipart/form-data; boundary=%s; charset=utf-8"
+                                multipart-boundary))
+            ("Authorization" . ,(concat
+                                 "Basic "
+                                 (base64-encode-string
+                                  (assoc-default 'authorization headers))))))
+         (url-request-data
+          (hledger-make-multipart-url-data multipart-boundary
+                                         (assq-delete-all 'authorization headers))))
+  (let ((url-buffer (url-retrieve-synchronously url)))
+    (if (not url-buffer)
+        nil
+      (with-current-buffer url-buffer
+        (url-http-parse-response)
+        (= url-http-response-status 200))))))
+
+(defun hledger-send-text-email (url user-and-password from to subject text)
+  "Send an email with text body.  
+URL is the api-endpoint [Mailgun HTTP API endpoint].
+USER-AND-PASSWORD is in the format 'user:password' and is
+base64-encoded to make the Authorization header for simple
+authentication. The rest of the fields have their obvious
+objectives. "
+  (hledger-send-email-with-mailgun url `((authorization . ,user-and-password)
+                                       (from . ,from)
+                                       (to . ,to)
+                                       (subject . ,subject)
+                                       (text . ,text))))
+
+(defun hledger-send-email (url user-and-password from to subject text html)
+  "Send an email with both HTML and Text parts.
+See `hledger-send-text-email'."
+  (hledger-send-email-with-mailgun url `((authorization . ,user-and-password)
+                                       (from . ,from)
+                                       (to . ,to)
+                                       (subject . ,subject)
+                                       (text . ,text)
+                                       (html . ,html))))
+
+
 (defun hledger-compute-next-reporting-time ()
     "Computes the time we must sent the email reports. "
     (let* ((now hledger-email-next-reporting-time)
@@ -115,9 +198,6 @@ This requires htmlize.el"
 
 (defun hledger-mail-reports ()
   "Email reports to yourself every month.
-This requires utils.el which is available in utils/ alonside
-hledger-mode/ directory.
-
 Returns t if the operation was successful.
 "
   (interactive)
@@ -125,7 +205,7 @@ Returns t if the operation was successful.
          (text-html-pair (hledger-generate-reports-to-email))
          (reports-text (car text-html-pair))
          (reports-html (cdr text-html-pair))
-         (success (utils-send-email hledger-email-api-url
+         (success (hledger-send-email hledger-email-api-url
                                     (concat hledger-email-api-user ":"
                                             hledger-email-api-password)
                                     hledger-email-api-sender
