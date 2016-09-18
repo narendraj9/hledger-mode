@@ -47,15 +47,15 @@
 ;;; Regexes
 (defvar hledger-empty-regex "^\\s-*$"
   "Regular expression for an empty line.")
-(defvar hledger-date-only-regex "^\\s-*[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}\\s-*$"
+(defvar hledger-date-only-regex "^\\s-*[0-9]\\{4\\}[-/][0-9]\\{2\\}[-/][0-9]\\{2\\}\\s-*$"
   "Regular expression a line with date only.")
-(defvar hledger-date-regex "[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}"
+(defvar hledger-date-regex "[0-9]\\{4\\}[-/][0-9]\\{2\\}[-/][0-9]\\{2\\}"
   "Regular expression for dates for font lock.")
-(defvar hledger-date-and-desc-regex "\\<[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}\\s-*[^[:space:]]+\\>"
+(defvar hledger-date-and-desc-regex (format "\\<%s\\s-*\\*?\\s-*[^[:space:]]+\\>" hledger-date-regex)
   "Regular expression for matching a starting entry with some description.")
-(defvar hledger-account-regex "\\(\\(assets\\|liabilities\\|equity\\|expenses\\|income\\|zadjustments\\)\\(:[a-z--]+\\)*\\)"
+(defvar hledger-account-regex "\\(\\([aA]ssets\\|[lL]iabilities\\|[Ee]quity\\|[Ee]xpenses\\|[iI]ncome\\|[Zz]adjustments\\)\\(:[A-Za-z--]+\\)*\\)"
   "Regular expression for a potential journal account.")
-(defvar hledger-whitespace-account-regex "\\s-*\\(\\(assets\\|liabilities\\|equity\\|expenses\\|income\\|zadjustments\\)\\(:[a-z--]+\\)*\\)"
+(defvar hledger-whitespace-account-regex (format "\\s-*%s" hledger-account-regex)
   "Regular expression for an account with leading whitespace.")
 (defvar hledger-comment-regex "^[ \t]*;"
   "Regular expression for a comment in journal file.")
