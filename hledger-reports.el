@@ -37,6 +37,9 @@
                                  "register")
   "Commands that can be passed to `hledger-jdo` function defined below.")
 
+(defcustom hledger-show-only-unstarred-p t
+  "Show only the un-tainted entries. 
+I taint entries with a star, to declare that they haven't been effective yet. ")
 
 (defcustom hledger-running-report-months
   6
@@ -244,8 +247,7 @@ easily."
         (jcommand (concat "hledger -f "
                           (shell-quote-argument hledger-jfile)
                           " "
-                          command
-                          " --end " (hledger-end-date (current-time)))))
+                          command)))
     (with-current-buffer jbuffer
       (let ((here (point)))
         (call-process-shell-command jcommand nil t nil)

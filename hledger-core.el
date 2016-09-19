@@ -199,7 +199,23 @@ do different stuff while interactively editing an entry."
        ((hledger-cur-starts-with-semicolp) (indent-line-to hledger-comments-column))
        ((hledger-cur-has-accp) (indent-line-to tab-width)))
       (forward-line 1))))
-    
+
+(defun hledger-toggle-star ()
+  "Toggle the star status of a journal entry."
+  (interactive)
+  (save-excursion
+    (let ((there (line-end-position)))
+      (beginning-of-line)
+      (while (not (looking-at hledger-date-and-desc-regex))
+        (forward-line -1))
+      ;; Update the date to today after each toggle 
+      (search-forward-regexp hledger-date-regex nil t)
+      (delete-region (line-beginning-position) (point))
+      (hledger-insert-date)
+      ;; Now handle the start/unstar stuff
+      (if (search-forward "*" there t)
+          (delete-char -3)
+        (insert "*")))))
 
 (provide 'hledger-core)
 ;;; hledger-core.el ends here

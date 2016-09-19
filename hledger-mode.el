@@ -59,7 +59,8 @@
 
 (defvar hledger-mode-map
   (let ((map (make-keymap)))
-    (define-key map (kbd "C-c i") 'hledger-append-clipboard-to-journal)
+    (define-key map (kbd "C-c C-i") 'hledger-append-clipboard-to-journal)
+    (define-key map (kbd "C-c C-t") 'hledger-toggle-star)
     (define-key map (kbd "RET")  'hledger-ret-command)
     (define-key map (kbd "<backtab>") 'hledger-backtab-command)
     map))
