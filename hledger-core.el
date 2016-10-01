@@ -64,6 +64,9 @@
 (defvar hledger-amount-regex (format "\\<%s\\s-*[-]?[0-9]+\\(\\.[0-9]+\\)?\\>"
                                      hledger-currency-string)
   "Regular expression to match an inserted amount in rupees.")
+(defvar hledger-whitespace-amount-regex (format "\\s-*%s"
+                                                hledger-amount-regex)
+  "Regular expression for whitespace followed by amount.")
 
 ;;; Indentation
 (defun hledger-line-matchesp (re offset)

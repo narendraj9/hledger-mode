@@ -80,6 +80,8 @@
     (define-key map (kbd "j") (defun run-command(c)
                                 (interactive "sCommand: ")
                                 (hledger-run-command c)))
+    (define-key map (kbd "n") 'hledger-next-line)
+    (define-key map (kbd "p") 'hledger-prev-line)
     map))
 
 (defconst hledger-font-lock-keywords-1

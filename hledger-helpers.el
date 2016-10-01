@@ -74,5 +74,26 @@
                 (current-local-map))
     (popup-tip result :margin t)))
 
+(defun hledger-move-line (count)
+  "Move to `count` lines relative to current line skipping all
+those which do not start with a word."
+  (forward-line count)
+  (while (and (or (not (looking-at (concat hledger-whitespace-account-regex
+                                           "\\|"
+                                           hledger-whitespace-amount-regex)))
+                  (looking-at hledger-empty-regex))
+              (not (or (bobp) (eobp))))
+    (forward-line (signum count))))
+
+(defun hledger-next-line ()
+  "Move to next line. See `hledger-move-line'."
+  (interactive)
+  (hledger-move-line 1))
+
+(defun hledger-prev-line ()
+  "Move to previous line. See `hledger-move-line'."
+  (interactive)
+  (hledger-move-line -1))
+
 (provide 'hledger-helpers)
 ;;; hledger-helpers.el ends here

@@ -332,7 +332,8 @@ complete incomestatement isn't much useful for me. "
          (end-time-string (hledger-format-time (hledger-nth-of-mth-month
                                                 hledger-reporting-day
                                                 0))))
-    (hledger-jdo (format "balance expenses income --depth 2 -A -p 'every 31 days from %s to %s'"
+    (hledger-jdo (format "balance expenses income --depth 2 -A -p 'every %sth day of month from %s to %s'"
+                         hledger-reporting-day
                          beg-time-string
                          end-time-string)
                  keep-bufferp
