@@ -89,6 +89,13 @@ I taint entries with a star, to declare that they haven't been effective yet. ")
   :group 'hledger
   :type 'face)
 
+(defcustom hledger-account-balance-expand-face
+  '(:foreground "Cornsilk" :background "DarkSlateGray")
+  "Face for the momentary text that expands account balances of
+  the present month interval."
+  :group 'hledger
+  :type 'face)
+
 (defvar hledger-last-run-command nil
   "Last run hledger-command.")
 
@@ -276,10 +283,12 @@ This is subject to change based on what things I am budgeting on.
 See `hledger-daily-report-accounts'."
   (interactive)
   (with-current-buffer (hledger-get-perfin-buffer)
-    (hledger-jdo (format "balance %s --begin %s --end %s"
-                         (shell-quote-argument hledger-daily-report-accounts)
-                         (hledger-format-time (current-time))
-                         (hledger-end-date (current-time))))
+    (let ((beg-time-string (hledger-format-time (current-time)))
+          (end-time-string (hledger-end-date (current-time)) ))
+      (hledger-jdo (format "balance %s --begin %s --end %s"
+                           (shell-quote-argument hledger-daily-report-accounts)
+                           beg-time-string
+                           end-time-string)))
     (goto-char (point-min))
     (insert (concat "Today you spent:\n"
                     "===============\n"))
@@ -302,6 +311,7 @@ complete incomestatement isn't much useful for me. "
                            beg-time-string
                            end-time-string)
                    t)
+      
       ;; Sort revenues
       (when (search-forward "Revenues:")
         (forward-line)
@@ -353,12 +363,12 @@ complete incomestatement isn't much useful for me. "
         (sort-numeric-fields -1 beg (point))
         (reverse-region beg (point)))
       (goto-char (point-max))
-      (insert "\nExpanded Running Report\n=======================\n\n"))
-    (hledger-jdo (format "balance expenses income --tree -A -p 'every 31 days from %s to %s'"
-                         beg-time-string
-                         end-time-string)
-                 t
-                 bury-bufferp)))
+      (insert "\nExpanded Running Report\n=======================\n\n")
+      (hledger-jdo (format "balance expenses income --tree -A -p 'every 31 days from %s to %s'"
+                           beg-time-string
+                           end-time-string)
+                   t
+                   bury-bufferp))))
 
 (defun hledger-compute-total (accounts-string &optional beg  end)
   "Computes the total for given accounts.
@@ -525,6 +535,39 @@ This is the reason dynamic scoping is cool sometimes."
                         header-dates
                         header-filler)
                 'font-lock-face hledger-report-header-face)))
+
+
+(defun hledger-expand-account-for-month ()
+  "Expand the balance for account in the current line."
+  (interactive)
+  (save-excursion
+    (forward-line 0)
+    (when (search-forward-regexp hledger-account-regex (line-end-position) t)
+      (let* ((account (substring-no-properties (match-string 0)))
+             (drop-count (length (split-string account ":")))
+             (beg-time (hledger-nth-of-prev-month hledger-reporting-day))
+             (end-time (hledger-nth-of-this-month hledger-reporting-day))
+             (beg-time-string (hledger-format-time beg-time))
+             (end-time-string (hledger-format-time end-time))
+             ;; Currently not showing the header 
+             (header (format "%s - %s\n--------------------\n"
+                             (hledger-friendlier-time beg-time)
+                             (hledger-friendlier-time end-time)))
+             (balance-report (hledger-shell-command-to-string
+                              (format "balance %s --flat -b %s -e %s --drop %d -N"
+                                      account
+                                      beg-time-string
+                                      end-time-string
+                                      drop-count)))
+             (text (propertize balance-report
+                               'font-lock-face
+                               hledger-account-balance-expand-face)))
+        (forward-line)
+        (momentary-string-display text
+                                  (point)
+                                  nil
+                                  "")))))
+
 
 (defun hledger-prev-report ()
   "Takes your current report back in time.
