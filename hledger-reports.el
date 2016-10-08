@@ -175,11 +175,6 @@ I taint entries with a star, to declare that they haven't been effective yet. ")
   (setq current-entry (make-overlay begin end))
   (overlay-put current-entry 'face '(:background "black")))
 
-(defun hledger-clear-undo-list ()
-  "Empty `buffer-undo-list`."
-  (buffer-disable-undo)
-  (buffer-enable-undo))
-
 (defun hledger-get-perfin-buffer (&optional keep-bufferp fetched-entriesp)
   "Get/create the `hledger-reporting-buffer-name' buffer.
 If the buffer is not intended for editing, then `q` closes it.
@@ -194,13 +189,6 @@ FIXME: Query emacs for the keys for the functions."
       (or keep-bufferp (erase-buffer)))
     jbuffer))
 
-(defun hledger-eval-region (beg end)
-  "Send selected region to hledger for evaluation."
-  (interactive "r")
-  (let ((command (completing-read "jdo> " hledger-jcompletions))
-        (hledger-jfile (make-temp-file "hledger")))
-    (write-region beg end hledger-jfile)
-    (hledger-jdo command)))
 
 (defun hledger-jentry ()
   "Make a new entry in the financial journal. Avoids editing old entries."
@@ -248,8 +236,6 @@ function in elisp only for the buffer contents.
 The position of point remains unaltered after this function
 call. This is for letting the caller transform the output more
 easily."
-  (if (eq major-mode 'hledger-mode)
-      (setq-local hledger-jfile (buffer-file-name)))
   (let ((jbuffer (hledger-get-perfin-buffer keep-bufferp))
         (jcommand (concat "hledger -f "
                           (shell-quote-argument hledger-jfile)
