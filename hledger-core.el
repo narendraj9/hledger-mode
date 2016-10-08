@@ -126,7 +126,7 @@ RE."
 (defun hledger-cur-has-datep ()
   "Returns true if current line has only date."
   (hledger-cur-line-matchesp hledger-date-only-regex))
-(defun hledger-cur-has-date-and-descp
+(defun hledger-cur-has-date-and-descp ()
     "Returns tru if current line had date and description."
   (hledger-cur-line-matchesp hledger-date-and-desc-regex))
 (defun hledger-cur-has-empty-commentp ()
