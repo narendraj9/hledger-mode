@@ -338,7 +338,7 @@ complete incomestatement isn't much useful for me. "
          (end-time-string (hledger-format-time (hledger-nth-of-mth-month
                                                 hledger-reporting-day
                                                 0))))
-    (hledger-jdo (format "balance %s %s --depth 2 -A -p 'every %sth day of month from %s to %s'"
+    (hledger-jdo (format "balance %s %s --depth 2 -A -p \"every %sth day of month from %s to %s\""
                          hledger-top-expense-account
                          hledger-top-asset-account
                          hledger-reporting-day
@@ -362,7 +362,7 @@ complete incomestatement isn't much useful for me. "
         (reverse-region beg (point)))
       (goto-char (point-max))
       (insert "\nExpanded Running Report\n=======================\n\n")
-      (hledger-jdo (format "balance %s %s --tree -A -p 'every %sth day of month from %s to %s'"
+      (hledger-jdo (format "balance %s %s --tree -A -p \"every %sth day of month from %s to %s\""
                            hledger-top-expense-account
                            hledger-top-asset-account
                            hledger-reporting-day
