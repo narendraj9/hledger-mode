@@ -37,6 +37,16 @@
                                  "register")
   "Commands that can be passed to `hledger-jdo` function defined below.")
 
+(defcustom hledger-top-asset-account "assets"
+  "Top level assets acccount."
+  :group 'hledger
+  :type 'string)
+
+(defcustom hledger-top-expense-account "expenses"
+  "Top level expense account."
+  :group 'hledger
+  :type 'string)
+
 (defcustom hledger-show-only-unstarred-p t
   "Show only the un-tainted entries. 
 I taint entries with a star, to declare that they haven't been effective yet. ")
@@ -328,7 +338,9 @@ complete incomestatement isn't much useful for me. "
          (end-time-string (hledger-format-time (hledger-nth-of-mth-month
                                                 hledger-reporting-day
                                                 0))))
-    (hledger-jdo (format "balance expenses income --depth 2 -A -p 'every %sth day of month from %s to %s'"
+    (hledger-jdo (format "balance %s %s --depth 2 -A -p 'every %sth day of month from %s to %s'"
+                         hledger-top-expense-account
+                         hledger-top-asset-account
                          hledger-reporting-day
                          beg-time-string
                          end-time-string)
@@ -350,7 +362,10 @@ complete incomestatement isn't much useful for me. "
         (reverse-region beg (point)))
       (goto-char (point-max))
       (insert "\nExpanded Running Report\n=======================\n\n")
-      (hledger-jdo (format "balance expenses income --tree -A -p 'every 31 days from %s to %s'"
+      (hledger-jdo (format "balance %s %s --tree -A -p 'every %sth day of month from %s to %s'"
+                           hledger-top-expense-account
+                           hledger-top-asset-account
+                           hledger-reporting-day
                            beg-time-string
                            end-time-string)
                    t
