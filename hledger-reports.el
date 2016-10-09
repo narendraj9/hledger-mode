@@ -503,24 +503,34 @@ three times.
       (goto-char (point-min))))
   (message "Done!"))
 
-(defun hledger-run-command-for-month (m command)
-  "Runs an hledger COMMAND for Mth month.
+(defun hledger-run-fn-for-month (m command)
+  "Runs a COMMAND for Mth month.
 This is the reason dynamic scoping is cool sometimes."
   (letf (((symbol-function 'current-time)
           (let ((time (hledger-nth-of-mth-month
                        (string-to-number (format-time-string "%d" (current-time)))
                        m)))
             `(lambda () ',time))))
-    (hledger-run-command command)))
+    (funcall command)))
 
-(defun hledger-run-command-for-day (m command)
-  "Runs an hledger COMMAND for Mth day relative to today."
+(defun hledger-run-fn-for-day (m command)
+  "Runs a COMMAND for Mth day relative to today."
   (letf (((symbol-function 'current-time)
           (let ((time (time-add
                        (current-time)
                        (days-to-time m))))
             `(lambda () ',time))))
-    (hledger-run-command command)))
+    (funcall command)))
+
+(defun hledger-run-command-for-month (m command)
+  "Run *hledger* command for month M where COMMAND is a string."
+  (hledger-run-fn-for-month m (lambda ()
+                                (hledger-run-command command))))
+
+(defun hledger-run-command-for-day (m command)
+  "Run *hledger* command for day M where COMMAND is a string."
+  (hledger-run-fn-for-day m (lambda ()
+                              (hledger-run-command command))))
 
 (defun hledger-generate-report-header (beg-time end-time)
   "Generates report header with dates."
@@ -537,10 +547,16 @@ This is the reason dynamic scoping is cool sometimes."
                         header-filler)
                 'font-lock-face hledger-report-header-face)))
 
-
 (defun hledger-expand-account-for-month ()
-  "Expand the balance for account in the current line."
+  "Expands account for the month according to `hledger-last-run-time'."
   (interactive)
+  (if (equal hledger-last-run-command "daily")
+      (message "No expansion for daily report.")
+    (hledger-run-fn-for-month hledger-last-run-time
+                              'hledger-expand-account-for-this-month)))
+
+(defun hledger-expand-account-for-this-month ()
+  "Expand the balance for account in the current line."
   (save-excursion
     (forward-line 0)
     (when (search-forward-regexp hledger-account-regex (line-end-position) t)
@@ -579,7 +595,7 @@ To be called once you have run a report that sets `hledger-last-run-command'."
     (`"daily" (hledger-run-command-for-day hledger-last-run-time
                                            hledger-last-run-command))
     (_ (hledger-run-command-for-month hledger-last-run-time
-                                    hledger-last-run-command))))
+                                      hledger-last-run-command))))
 
 (defun hledger-next-report ()
   "Takes your report forward in time.
