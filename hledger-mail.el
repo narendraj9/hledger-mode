@@ -169,7 +169,7 @@ See `hledger-send-text-email'."
            (next-month-time (time-add now (days-to-time 30)))
            (next-month-day (string-to-number
                             (format-time-string "%d" next-month-time)))
-           (delta (days-to-time (- 15 next-month-day)))
+           (delta (days-to-time (- hledger-reporting-day next-month-day)))
            (next-time (time-add next-month-time delta)))
       next-time))
 
