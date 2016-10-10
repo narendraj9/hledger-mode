@@ -47,12 +47,17 @@
   :group 'hledger
   :type 'string)
 
+(defcustom hledger-top-income-account "income"
+  "Top level expense account."
+  :group 'hledger
+  :type 'string)
+
 (defcustom hledger-show-only-unstarred-p t
   "Show only the un-tainted entries. 
 I taint entries with a star, to declare that they haven't been effective yet. ")
 
 (defcustom hledger-running-report-months
-  6
+  5
   "Number of months to show in the running report."
   :group 'hledger
   :type 'number)
@@ -282,7 +287,7 @@ See `hledger-daily-report-accounts'."
     (let ((beg-time-string (hledger-format-time (current-time)))
           (end-time-string (hledger-end-date (current-time)) ))
       (hledger-jdo (format "balance %s --begin %s --end %s"
-                           (shell-quote-argument hledger-daily-report-accounts)
+                           hledger-daily-report-accounts
                            beg-time-string
                            end-time-string)))
     (goto-char (point-min))
@@ -338,12 +343,14 @@ complete incomestatement isn't much useful for me. "
          (end-time-string (hledger-format-time (hledger-nth-of-mth-month
                                                 hledger-reporting-day
                                                 0))))
-    (hledger-jdo (format "balance %s %s --depth 2 -A -p \"every %sth day of month from %s to %s\""
+    (hledger-jdo (format "balance %s %s --depth 2 -A -p %s"
                          hledger-top-expense-account
-                         hledger-top-asset-account
-                         hledger-reporting-day
-                         beg-time-string
-                         end-time-string)
+                         hledger-top-income-account
+                         (shell-quote-argument
+                          (format "every %sth day of month from %s to %s"
+                                  hledger-reporting-day
+                                  beg-time-string
+                                  end-time-string)))
                  keep-bufferp
                  bury-bufferp)
     (when (not bury-bufferp)
@@ -362,12 +369,13 @@ complete incomestatement isn't much useful for me. "
         (reverse-region beg (point)))
       (goto-char (point-max))
       (insert "\nExpanded Running Report\n=======================\n\n")
-      (hledger-jdo (format "balance %s %s --tree -A -p \"every %sth day of month from %s to %s\""
+      (hledger-jdo (format "balance %s %s --tree -A -p %s"
                            hledger-top-expense-account
                            hledger-top-asset-account
-                           hledger-reporting-day
-                           beg-time-string
-                           end-time-string)
+                           (shell-quote-argument (format "every %sth day of month from %s to %s"
+                                                         hledger-reporting-day
+                                                         beg-time-string
+                                                         end-time-string)))
                    t
                    bury-bufferp))))
 
@@ -393,7 +401,8 @@ If that changes, things will break. BEG and END are dates."
                           (if beg (concat " --begin " beg) "") 
                           " --end " (or end date-now)
                           " --depth 1"
-                          " --format '\"%(account)\" %(total)' ")))
+                          " --format "
+                          (shell-quote-argument "\"%(account)\" %(total) "))))
          (elisp-string (concat "("
                                (replace-regexp-in-string
                                 (concat hledger-currency-string
@@ -627,7 +636,7 @@ See `hledger-prev-report'."
                          '(read-only t front-sticky t))))
 
 (defun hledger-get-top-level-acount (acc-string)
-  "Returns the top-level account from ACC-STRING."
+  "Returns the top-level account as a symbol from ACC-STRING."
   (car (split-string acc-string ":")))
 
 (provide 'hledger-reports)
