@@ -450,24 +450,29 @@ three times.
                           reporting-date-now))
          ;; For average balances
          (total-assets
-          (lax-plist-get totals-plist-1
-                         (hledger-get-top-level-acount hledger-ratios-assets-accounts)))
+          (or (lax-plist-get totals-plist-1
+                             (hledger-get-top-level-acount hledger-ratios-assets-accounts))
+              0))
          (total-income
-          (lax-plist-get totals-plist-1
-                         (hledger-get-top-level-acount hledger-ratios-income-accounts)))
+          (or (lax-plist-get totals-plist-1
+                             (hledger-get-top-level-acount hledger-ratios-income-accounts))
+              0))
          (total-expenses
-          (lax-plist-get totals-plist-1
-                         (hledger-get-top-level-acount hledger-ratios-essential-expense-accounts)))
+          (or (lax-plist-get totals-plist-1
+                             (hledger-get-top-level-acount hledger-ratios-essential-expense-accounts))
+              0))
          ;; For current balances
          (totals-plist-2 (hledger-compute-totals
                           (list hledger-ratios-liquid-asset-accounts
                                 hledger-ratios-debt-accounts)))
          (liquid-assets
-          (lax-plist-get totals-plist-2
-                         (hledger-get-top-level-acount hledger-ratios-liquid-asset-accounts)))
+          (or (lax-plist-get totals-plist-2
+                             (hledger-get-top-level-acount hledger-ratios-liquid-asset-accounts))
+              0))
          (liabilities
-          (lax-plist-get totals-plist-2
-                         (hledger-get-top-level-acount hledger-ratios-debt-accounts)))
+          (or (lax-plist-get totals-plist-2
+                             (hledger-get-top-level-acount hledger-ratios-debt-accounts))
+              0))
          (monthly-expenses (/ total-expenses 12))
          (monthly-income (/ total-income 12.0))
          (monthly-savings (/ total-assets 12.0)))

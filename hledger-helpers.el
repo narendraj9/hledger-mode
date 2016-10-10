@@ -62,7 +62,8 @@
   "Wrapper macro for interactive key bindings."
   `(defun ,(intern (symbol-name name)) () (interactive)
           (setq hledger-last-run-time 0)
-          (hledger-run-command ,command)))
+          (hledger-run-command ,command)
+          (goto-char (point-min))))
 
 (defun hledger-show-view-mode-help ()
   "Show help in hledger view mode."
