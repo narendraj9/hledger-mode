@@ -69,10 +69,13 @@
   "Show help in hledger view mode."
   (interactive)
   (let ((result ""))
+    ;; Skip the keybinding for 's' [for summarizing ratios]
     (map-keymap (lambda (k v) (when (characterp k)
                                 (setq result
                                       (concat result
-                                              (format "%c %s\n" k v)))))
+                                              (if (equal k ?s)
+                                                  "s summarize-report\n"
+                                                (format "%c %s\n" k v))))))
                 (current-local-map))
     (popup-tip result :margin t)))
 

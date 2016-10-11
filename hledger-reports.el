@@ -484,6 +484,27 @@ three times.
           'dr (/ liabilities (* liquid-assets 1.0)))))    ;; Debt ratio
 
 
+(defun hledger-summarize-ratios (ratios)
+  "Return a string summary of RATIOS"
+  (let ((efr (plist-get ratios 'efr))
+        (cr (plist-get ratios 'cr))
+        (dr (plist-get ratios 'dr))
+        (sr (plist-get ratios 'sr))
+        (avg-income (plist-get ratios 'avg-income))
+        (avg-expenses (plist-get ratios 'avg-expenses)))
+    (format
+     (concat
+      (make-string 80 ?=) "\n"
+      "• Your current assets would be consumed in %.2f months with this lifestyle.\n"
+      "• Your liquid assets are %.2f times your liabilities/debt.\n"
+      "• %.2f%% of assets are borrowed.\n"
+      "• For the past one year, you have been saving %.2f%% of your average income.\n"
+      (make-string 80 ?=) "\n")
+     efr
+     cr
+     (* dr 100.0)
+     sr)))
+
 (defun hledger-overall-report ()
   "A combination of all the relevant reports."
   (interactive)
@@ -498,7 +519,8 @@ three times.
              (dr (plist-get ratios 'dr))
              (sr (plist-get ratios 'sr))
              (avg-income (plist-get ratios 'avg-income))
-             (avg-expenses (plist-get ratios 'avg-expenses)))
+             (avg-expenses (plist-get ratios 'avg-expenses))
+             (summary (hledger-summarize-ratios ratios)))
         (goto-char (point-min))
         (forward-line 2)
         (insert (format "
@@ -513,9 +535,19 @@ three times.
 "                                                             
                         efr sr
                         cr  avg-income
-                        dr  avg-expenses)))                             
-      (goto-char (point-min))))
-  (message "Done!"))
+                        dr  avg-expenses))
+        (define-key
+          (current-local-map)
+          (kbd "s")
+          `(lambda ()
+             "Show summary for the ratios."
+             (interactive)
+             (momentary-string-display ,(concat summary)
+                                       ,(point)
+                                       ?s
+                                       "Press 's' to hide"))))
+      (goto-char (point-min))
+      (message "Done!"))))
 
 (defun hledger-run-fn-for-month (m command)
   "Runs a COMMAND for Mth month.

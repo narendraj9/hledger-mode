@@ -65,6 +65,7 @@ COMMAND, ARG and IGNORED the regular meanings."
 
 (defvar hledger-view-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-q") 'hledger-kill-reporting-window)
     (define-key map (kbd "q") 'bury-buffer)
     (define-key map (kbd "h") 'hledger-show-view-mode-help)
     (define-key map (kbd "w") 'hledger-copy-to-clipboard)
@@ -78,10 +79,9 @@ COMMAND, ARG and IGNORED the regular meanings."
     (define-key map (kbd "j") (defun run-command(c)
                                 (interactive "sCommand: ")
                                 (hledger-run-command c)))
+    (define-key map (kbd "<tab>") 'hledger-expand-account-for-month)
     (define-key map (kbd "n") 'hledger-next-line)
     (define-key map (kbd "p") 'hledger-prev-line)
-    (define-key map (kbd "<tab>") 'hledger-expand-account-for-month)
-    (define-key map (kbd "C-c C-q") 'hledger-kill-reporting-window)
     map))
 
 (defconst hledger-font-lock-keywords-1
