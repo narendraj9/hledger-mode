@@ -1,25 +1,22 @@
-;;; -*- lexical-binding: t -*-
-;;; hledger-mode.el -- A mode for writing journal entries for hledger
+;;; hledger-mode.el --- A mode for writing journal entries for hledger.
 
-;;; Copyright (C) 2015-2016 Narendra Joshi 
-
+;; Copyright (C) 2015-2016 Narendra Joshi
 ;; Author: Narendra Joshi <narendraj9@gmail.com>
-;; URL: 
+;; URL: https://github.com/narendraj9/hledger-mode.git
 ;; Version: 0.1
-;; Keywords: hledger
-;; Package-Requires: ((json "1.4") (popup "0.5.3"))
+;; Keywords: data
+;; Package-Requires: ((emacs "24.3") (popup "0.5.3"))
 
 ;;; Commentary:
 ;;
-;; This is a major mode writing hledger journal files. You must have
+;; This is a major mode writing hledger journal files.  You must have
 ;; hledger installed to be able to create the reports: balancesheet,
 ;; income statement, etc.
 ;;
 
-;;; Code;
+;;; Code:
 
 (require 'json)
-
 (require 'hledger-core)
 (require 'hledger-helpers)
 (require 'hledger-reports)
@@ -45,7 +42,8 @@
   "A source for completing account names in a hledger buffer.")
 
 (defun company-hledger (command &optional arg &rest ignored)
-  "Company backend for completion of existing account names."
+  "Company backend for hledger-mode.
+COMMAND, ARG and IGNORED the regular meanings."
   (interactive (list 'interactive))
   (pcase command
     (`interactive (company-begin-backend 'company-hledger))
@@ -91,10 +89,10 @@
    `(,hledger-account-regex . font-lock-variable-name-face)
    `(,hledger-date-regex . font-lock-string-face)
    `(,hledger-amount-regex . font-lock-constant-face))
-  "Minimal highlighting expressions for hledger mode")
+  "Minimal highlighting expressions for hledger mode.")
 
 (defvar hledger-font-lock-defaults '(hledger-font-lock-keywords-1)
-  "Default highlighting expressions for hledger mode")
+  "Default highlighting expressions for hledger mode.")
 
 (defvar hledger-mode-syntax-table (let ((st (make-syntax-table)))
                                     (modify-syntax-entry ?: "_" st)
@@ -104,7 +102,7 @@
   "Syntax table for hledger mode.")
 
 (defun hledger-mode-init ()
-  "Function that does initial setup in the major-mode function."
+  "Function that does initial setup in the \"major-mode\" function."
   (use-local-map hledger-mode-map)
   (setq-local font-lock-defaults hledger-font-lock-defaults)
   (setq-local indent-line-function 'hledger-indent-line)
@@ -139,3 +137,4 @@ highlighting in both kinds of buffers."
 
 (provide 'hledger-mode)
 
+;;; hledger-mode.el ends here
