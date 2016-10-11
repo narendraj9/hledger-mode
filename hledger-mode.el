@@ -1,5 +1,4 @@
-;;; -*- lexical-binding: t -*-
-;;; hledger-mode.el -- A mode for writing journal entries for hledger
+;;; hledger-mode.el --- A mode for writing journal entries for hledger -*- lexical-binding: t -*-
 
 ;;; Copyright (C) 2015-2016 Narendra Joshi 
 
@@ -138,4 +137,4 @@ highlighting in both kinds of buffers."
   (use-local-map hledger-view-mode-map))
 
 (provide 'hledger-mode)
-
+;;; hledger-mode.el ends here
