@@ -596,7 +596,7 @@ This is the reason dynamic scoping is cool sometimes."
         (forward-line)
         (momentary-string-display text
                                   (point)
-                                  nil
+                                  ?\t
                                   "")))))
 
 
