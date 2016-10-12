@@ -5,7 +5,7 @@
 ;; URL: https://github.com/narendraj9/hledger-mode.git
 ;; Version: 0.1
 ;; Keywords: data
-;; Package-Requires: ((emacs "24.3") (popup "0.5.3"))
+;; Package-Requires: ((emacs "24.4") (popup "0.5.3"))
 
 ;;; Commentary:
 ;;
