@@ -16,7 +16,6 @@
 
 ;;; Code:
 
-(require 'json)
 (require 'hledger-core)
 (require 'hledger-helpers)
 (require 'hledger-reports)
