@@ -73,6 +73,7 @@ COMMAND, ARG and IGNORED the regular meanings."
     (define-key map (kbd "q") 'bury-buffer)
     (define-key map (kbd "h") 'hledger-show-view-mode-help)
     (define-key map (kbd "w") 'hledger-copy-to-clipboard)
+    (define-key map (kbd "j") 'hledger-run-command)
     (define-key map (kbd "<") 'hledger-prev-report)
     (define-key map (kbd ">") 'hledger-next-report)
     (define-key map (kbd ".") 'hledger-present-report)

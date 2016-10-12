@@ -485,7 +485,7 @@ three times.
      efr
      cr
      (* dr 100.0)
-     sr)))
+     (* sr 100.0))))
 
 (defun hledger-overall-report ()
   "A combination of all the relevant reports."
