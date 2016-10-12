@@ -26,12 +26,16 @@
 (add-to-list 'auto-mode-alist '("\\.journal\\'" . hledger-mode))
 
 (defgroup hledger nil
-  "Customization group hledger-mode.")
+  "Customization group hledger-mode."
+  :group 'data)
 
 (defcustom hledger-mode-hook nil
   "Normal hook for entering hledger-mode."
   :type 'hook
   :group 'hledger)
+
+(defvar ac-sources nil
+  "Sources for completion.")
 
 (defvar hledger-accounts-cache nil
   "List of accounts cached for ac and company modes.")
@@ -50,10 +54,10 @@ COMMAND, ARG and IGNORED the regular meanings."
     (`prefix (and (eq major-mode 'hledger-mode)
                   (company-grab-symbol)))
     (`candidates
-     (remove-if-not
-      (lambda (c)
-        (string-prefix-p arg c))
-      hledger-accounts-cache))))
+     (delq nil
+           (mapcar (lambda (c)
+                     (and (string-prefix-p arg c) c))
+                   hledger-accounts-cache)))))
 
 (defvar hledger-mode-map
   (let ((map (make-keymap)))
@@ -114,7 +118,6 @@ COMMAND, ARG and IGNORED the regular meanings."
 (define-derived-mode hledger-mode prog-mode "HLedger" ()
   "Major mode for editing journal files."
   :syntax-table hledger-mode-syntax-table
-  (interactive)
   (hledger-mode-init))
 
 ;;;###autoload
@@ -124,7 +127,6 @@ so that the key bindings are not shared between buffers that are used for
 viewing reports and the journal file. I require the same kind of syntax
 highlighting in both kinds of buffers."
   :syntax-table hledger-mode-syntax-table
-  (interactive)
   (setq-local font-lock-defaults hledger-font-lock-defaults)
   ;; Highlight current line for better readability
   (hl-line-mode 1)

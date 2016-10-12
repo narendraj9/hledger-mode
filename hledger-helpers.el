@@ -25,6 +25,9 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'cl))
+
 (require 'popup)
 
 (defun hledger-ret-command ()
@@ -88,7 +91,7 @@ those which do not start with a word."
                                            hledger-whitespace-amount-regex)))
                   (looking-at hledger-empty-regex))
               (not (or (bobp) (eobp))))
-    (forward-line (signum count))))
+    (forward-line (if (> count 0) 1 -1))))
 
 (defun hledger-next-line ()
   "Move to next line. See `hledger-move-line'."

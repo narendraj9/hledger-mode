@@ -69,7 +69,7 @@ I am not checking the range. You are own your own. "
   :group 'hledger
   :type 'integer)
 
-(defcustom hledger-email-next-reporting-time
+(defvar hledger-email-next-reporting-time
   (let* ((time (current-time))
          (day (string-to-number (format-time-string "%d" time)))
          (delta-time (days-to-time (- hledger-reporting-day

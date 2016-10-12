@@ -54,7 +54,9 @@
 
 (defcustom hledger-show-only-unstarred-p t
   "Show only the un-tainted entries. 
-I taint entries with a star, to declare that they haven't been effective yet. ")
+I taint entries with a star, to declare that they haven't been effective yet. "
+  :group 'hledger
+  :type 'boolean)
 
 (defcustom hledger-running-report-months
   5
@@ -171,24 +173,7 @@ I taint entries with a star, to declare that they haven't been effective yet. ")
     (forward-line -1))
   (end-of-line)
   (let ((times-yet-to-move (forward-line 2)))
-    (dotimes (i times-yet-to-move)
-      (insert "\n"))))
-
-(defun hledger-overlay-current-entry ()
-  "Engulf an entry in an overlay."
-  (interactive)
-  (while (and (not (bobp))
-              (not (looking-at hledger-empty-regex)))
-    (forward-line -1))
-  (forward-line 1)
-  (setq begin (point))
-  (forward-line 1)
-  (while (and (not (looking-at hledger-empty-regex))
-              (not (eobp)))
-    (forward-line 1))
-  (setq end (point))
-  (setq current-entry (make-overlay begin end))
-  (overlay-put current-entry 'face '(:background "black")))
+    (insert (make-string times-yet-to-move ?\n))))
 
 (defun hledger-get-perfin-buffer (&optional keep-bufferp fetched-entriesp)
   "Get/create the `hledger-reporting-buffer-name' buffer.
@@ -435,8 +420,7 @@ three times.
 
 "
   (interactive)
-  (let* ((date-now (hledger-end-date (current-time)))
-         (reporting-date-an-year-ago (hledger-format-time (hledger-nth-of-mth-month
+  (let* ((reporting-date-an-year-ago (hledger-format-time (hledger-nth-of-mth-month
                                                            hledger-reporting-day
                                                            -12)))
          (reporting-date-now (hledger-end-date (hledger-nth-of-this-month
@@ -489,9 +473,7 @@ three times.
   (let ((efr (plist-get ratios 'efr))
         (cr (plist-get ratios 'cr))
         (dr (plist-get ratios 'dr))
-        (sr (plist-get ratios 'sr))
-        (avg-income (plist-get ratios 'avg-income))
-        (avg-expenses (plist-get ratios 'avg-expenses)))
+        (sr (plist-get ratios 'sr)))
     (format
      (concat
       (make-string 80 ?=) "\n"
@@ -612,10 +594,6 @@ This is the reason dynamic scoping is cool sometimes."
              (end-time (hledger-nth-of-this-month hledger-reporting-day))
              (beg-time-string (hledger-format-time beg-time))
              (end-time-string (hledger-format-time end-time))
-             ;; Currently not showing the header 
-             (header (format "%s - %s\n--------------------\n"
-                             (hledger-friendlier-time beg-time)
-                             (hledger-friendlier-time end-time)))
              (balance-report (hledger-shell-command-to-string
                               (format "balance %s --flat -b %s -e %s --drop %d -N"
                                       account
