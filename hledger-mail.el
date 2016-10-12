@@ -27,6 +27,8 @@
 
 (require 'hledger-core)
 (require 'hledger-reports)
+(require 'url)
+(require 'url-http)
 
 (defcustom hledger-reporting-buffer-name "*Personal Finance*"
   "Name of the buffer for showing or working with reports."

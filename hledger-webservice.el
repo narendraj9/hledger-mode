@@ -28,6 +28,7 @@
 
 (require 'hledger-core)
 (require 'hledger-reports)
+(require 'json)
 
 (defcustom hledger-service-fetch-url
   "https://services.vicarie.in/api/entry"
