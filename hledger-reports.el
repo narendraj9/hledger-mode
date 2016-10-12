@@ -26,6 +26,7 @@
 ;;; Code:
 
 (require 'hledger-core)
+(require 'cl-lib)
 
 (defconst hledger-jcompletions '("balancesheet"
                                  "daily"
@@ -534,20 +535,20 @@ three times.
 (defun hledger-run-fn-for-month (m command)
   "Runs a COMMAND for Mth month.
 This is the reason dynamic scoping is cool sometimes."
-  (letf (((symbol-function 'current-time)
-          (let ((time (hledger-nth-of-mth-month
-                       (string-to-number (format-time-string "%d" (current-time)))
-                       m)))
-            `(lambda () ',time))))
+  (cl-letf (((symbol-function 'current-time)
+             (let ((time (hledger-nth-of-mth-month
+                          (string-to-number (format-time-string "%d" (current-time)))
+                          m)))
+               `(lambda () ',time))))
     (funcall command)))
 
 (defun hledger-run-fn-for-day (m command)
   "Runs a COMMAND for Mth day relative to today."
-  (letf (((symbol-function 'current-time)
-          (let ((time (time-add
-                       (current-time)
-                       (days-to-time m))))
-            `(lambda () ',time))))
+  (cl-letf (((symbol-function 'current-time)
+             (let ((time (time-add
+                          (current-time)
+                          (days-to-time m))))
+               `(lambda () ',time))))
     (funcall command)))
 
 (defun hledger-run-command-for-month (m command)

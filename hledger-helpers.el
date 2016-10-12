@@ -25,9 +25,6 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'cl))
-
 (require 'popup)
 
 (defun hledger-ret-command ()
