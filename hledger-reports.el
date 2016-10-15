@@ -119,6 +119,9 @@ I taint entries with a star, to declare that they haven't been effective yet."
 (defvar hledger-last-run-time 0
   "Last month on which a command was run.")
 
+(defvar hledger-ratios-summary nil
+  "Summary for the ratios in overall report.")
+
 (defun hledger-format-time (time)
   "Format TIME in \"%Y-%m-%d\"."
   (format-time-string "%Y-%m-%d" time))
@@ -194,7 +197,7 @@ non-nil, it lands us in the `hledger-mode' ."
           (progn
             (hledger-mode))
         (hledger-view-mode))
-      (or keep-bufferp (erase-buffer)))
+      (or keep-bufferp (delete-region (point-min) (point-max))))
     jbuffer))
 
 
@@ -536,16 +539,9 @@ three times."
                         efr sr
                         cr  avg-income
                         dr  avg-expenses))
-        (define-key
-          (current-local-map)
-          (kbd "s")
-          `(lambda ()
-             "Show summary for the ratios."
-             (interactive)
-             (momentary-string-display ,(concat summary)
-                                       ,(point)
-                                       ?s
-                                       "Press 's' to hide"))))
+        ;; Let's update the ratios summary
+        (setq hledger-ratios-summary summary)
+        (setq hledger-ratios-summary-point (point)))
       (goto-char (point-min))
       (message "Done!"))))
 
@@ -649,6 +645,12 @@ See `hledger-prev-report'."
                                            hledger-last-run-command))
     (_ (hledger-run-command-for-month hledger-last-run-time
                                       hledger-last-run-command))))
+
+(defun hledger-refresh-buffer ()
+  "Hack to refresh current report using `hledger-prev-report'."
+  (interactive)
+  (let ((hledger-last-run-time (1+ hledger-last-run-time)))
+    (hledger-prev-report)))
 
 (defun hledger-present-report ()
   "Reset time for the current report.

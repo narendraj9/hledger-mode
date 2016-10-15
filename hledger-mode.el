@@ -64,6 +64,7 @@ COMMAND, ARG and IGNORED the regular meanings."
 (defvar hledger-view-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-q") 'hledger-kill-reporting-window)
+    (define-key map (kbd "g") 'hledger-refresh-buffer)
     (define-key map (kbd "q") 'bury-buffer)
     (define-key map (kbd "h") 'hledger-show-view-mode-help)
     (define-key map (kbd "w") 'hledger-copy-to-clipboard)
@@ -76,6 +77,7 @@ COMMAND, ARG and IGNORED the regular meanings."
     (define-key map (kbd "d") (hledger-as-command hledger-daily-report* "daily"))
     (define-key map (kbd "b") (hledger-as-command hledger-balancesheet* "balancesheet"))
     (define-key map (kbd "<tab>") 'hledger-expand-account-for-month)
+    (define-key map (kbd "s") 'hledger-summarize)
     (define-key map (kbd "n") 'hledger-next-line)
     (define-key map (kbd "p") 'hledger-prev-line)
     map))

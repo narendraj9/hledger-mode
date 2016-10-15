@@ -71,13 +71,18 @@
   "Show help in hledger view mode."
   (interactive)
   (let ((result ""))
-    ;; Skip the keybinding for 's' [for summarizing ratios]
-    (map-keymap (lambda (k v) (when (characterp k)
-                                (setq result
-                                      (concat result
-                                              (if (equal k ?s)
-                                                  "s summarize-report\n"
-                                                (format "%c %s\n" k v))))))
+    ;; Show key binding for single character keys
+    (map-keymap (lambda (k v)
+                  (when (and (characterp k)
+                             (<= k ?z)
+                             (>= k ?a))
+                    (setq result
+                          (concat result
+                                  (format "%c %s\n"
+                                          k
+                                          (replace-regexp-in-string "hledger-"
+                                                                    ""
+                                                                    (symbol-name v)))))))
                 (current-local-map))
     (popup-tip result :margin t)))
 
@@ -100,6 +105,20 @@
   "Move to previous line.  See `hledger-move-line'."
   (interactive)
   (hledger-move-line -1))
+
+
+(defun hledger-summarize ()
+  "Show summary for the financial ratios."
+  (interactive)
+  (if hledger-ratios-summary
+      (momentary-string-display hledger-ratios-summary
+                                (if (equal hledger-last-run-command
+                                           "overall")
+                                    hledger-ratios-summary-point
+                                  (point-max))
+                                ?s
+                                "Press 's' to hide")
+    (message "Overall report hasn't been compiled yet.")))
 
 (provide 'hledger-defuns)
 ;;; hledger-defuns.el ends here
