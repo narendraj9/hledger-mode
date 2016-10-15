@@ -41,12 +41,12 @@
   :type 'string)
 
 (defcustom hledger-email-api-password "EMAIL_API_PASSWD"
-  "Password for the Email API"
+  "Password for the Email API."
   :group 'hledger
   :type 'string)
 
 (defcustom hledger-email-api-user "EMAIL_API_USER"
-  "Username for Email API"
+  "Username for Email API."
   :group 'hledger
   :type 'string)
 
@@ -62,7 +62,7 @@
 
 (defcustom hledger-reporting-day 15
   "Day of the month for sending email reports.
-I am not checking the range. You are own your own. "
+I am not checking the range.  You are own your own."
   :group 'hledger
   :type 'integer)
 
@@ -82,8 +82,8 @@ It is updated after an email has been sent to the user.")
 
 
 (defun hledger-make-multipart-boundary ()
-  "Make the boundary for multipart/form-data
-.Creates some slightly unprobably gibberish."
+  "Make the boundary for multipart/form-data.
+Creates some slightly unprobably gibberish."
   (concat "x" (make-string 18 ?-) (format "%x" (random 99999999999))))
 
 (defun hledger-make-multipart-url-data (boundary params)
@@ -104,11 +104,11 @@ It is updated after an email has been sent to the user.")
 (defun hledger-send-email-with-mailgun (url headers)
  "Send email using Mailgun.
 
-Returns a boolean value stating if the operation failed or succeeded. 
+Returns a boolean value stating if the operation failed or succeeded.
 t => success nil => failure
 
 This function emulates the curl command as available in the Mailgun Docs:
-curl -s --user USER-AND-PASSWD URL 
+curl -s --user USER-AND-PASSWD URL
  -F FROM='Excited User <excited@samples.mailgun.org>' \
  -F TO='devs@mailgun.net' \
  -F SUBJECT='Hello' \
@@ -119,8 +119,7 @@ HEADERS is an assoc-list with the headers of the request.
   (from . FROM)
   (to   . TO)
   (subject . SUBJECT)
-  (text . TEXT))
-"
+  (text . TEXT))"
 (let* ((multipart-boundary (hledger-make-multipart-boundary))
          (url-request-method "POST")
          (url-request-extra-headers
@@ -142,12 +141,15 @@ HEADERS is an assoc-list with the headers of the request.
         (= url-http-response-status 200))))))
 
 (defun hledger-send-text-email (url user-and-password from to subject text)
-  "Send an email with text body.  
+  "Send an email with text body.
 URL is the api-endpoint [Mailgun HTTP API endpoint].
 USER-AND-PASSWORD is in the format 'user:password' and is
 base64-encoded to make the Authorization header for simple
-authentication. The rest of the fields have their obvious
-objectives. "
+authentication.
+
+FROM and TO are email ids for the sender and receiver respectively.
+SUBJECT is the subject of the email.
+TEXT is the body of the mail."
   (hledger-send-email-with-mailgun url `((authorization . ,user-and-password)
                                        (from . ,from)
                                        (to . ,to)
@@ -155,8 +157,9 @@ objectives. "
                                        (text . ,text))))
 
 (defun hledger-send-email (url user-and-password from to subject text html)
-  "Send an email with both HTML and Text parts.
-See `hledger-send-text-email'."
+  "Send email with URL, USER-AND-PASSWORD, FROM, TO, SUBJECT and TEXT.
+See `hledger-send-text-email'.  This function would send an email
+with both Text and HTML parts as specified."
   (hledger-send-email-with-mailgun url `((authorization . ,user-and-password)
                                        (from . ,from)
                                        (to . ,to)
@@ -166,7 +169,7 @@ See `hledger-send-text-email'."
 
 
 (defun hledger-compute-next-reporting-time ()
-    "Computes the time we must sent the email reports. "
+    "Computes the time we must sent the email reports."
     (let* ((now hledger-email-next-reporting-time)
            (next-month-time (time-add now (days-to-time 30)))
            (next-month-day (string-to-number
@@ -200,8 +203,7 @@ This requires htmlize.el"
 
 (defun hledger-mail-reports ()
   "Email reports to yourself every month.
-Returns t if the operation was successful.
-"
+Returns t if the operation was successful."
   (interactive)
   (let* ((hledger-reporting-buffer-name "*Personal Finance Email*")
          (text-html-pair (hledger-generate-reports-to-email))
@@ -224,7 +226,7 @@ Returns t if the operation was successful.
 
 (defun hledger-mail-reports-run-async-task ()
     "Async task for emailing the reports.
-This isn't meant to be useful for anybody other than myself. This is extermely
+This isn't meant to be useful for anybody other than myself.  This is extermely
 inefficient."
     (require 'async)
     (async-start

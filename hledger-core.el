@@ -40,7 +40,7 @@
   :type 'integer)
 
 (defcustom hledger-currency-string "₹"
-  "String to be used for currency. Assumes it is prefixed."
+  "String to be used for currency.  Assumes it is prefixed."
   :group 'hledger
   :type 'integer)
 
@@ -70,9 +70,7 @@
 
 ;;; Indentation
 (defun hledger-line-matchesp (re offset)
-  "Returns a boolean value stating whether the line OFFSET 
-lines above the current line starts with the regular experssion
-RE."
+  "Check if regex RE will match the beginning for line current-line - OFFSET."
   (save-excursion
     (forward-line offset)
     (beginning-of-line)
@@ -80,10 +78,10 @@ RE."
 
 ;; Internal functions for looking-at lines' beginnings
 (defun hledger-cur-line-matchesp (re)
-  "Returns true if current line starts with RE."
+  "Return true if current line has regex RE in the beginning."
   (hledger-line-matchesp re 0))
 (defun hledger-prev-line-matchesp (re)
-  "Returns true if previous line matches RE."
+  "Return true if previous line has regex RE in the beginning."
   (hledger-line-matchesp re -1))
 
 ;; Auxiliary funtions[s]
@@ -98,7 +96,7 @@ RE."
   (indent-line-to hledger-comments-column)
   (insert "; "))
 (defun hledger-insert-rupee ()
-  "Insert the amount for a transaction in hledger"
+  "Insert the amount for a transaction in hledger."
   (beginning-of-line)
   (re-search-forward hledger-whitespace-account-regex)
   (insert (concat "   " hledger-currency-string " ")))
@@ -111,45 +109,45 @@ RE."
   (delete-region (point) (line-end-position)))
 
 (defun hledger-acc-line-has-rupeep ()
-  "Returns true if the account line has an amount."
+  "Return true if the account line has an amount."
   (hledger-cur-line-matchesp (concat hledger-whitespace-account-regex
-                                     (format "\\s-*%s\\s-*$" 
+                                     (format "\\s-*%s\\s-*$"
                                              hledger-currency-string))))
 (defun hledger-expecting-rupeep ()
-  "Returns true if we should insert a rupee sign."
+  "Return true if we should insert a rupee sign."
   (hledger-cur-line-matchesp (concat hledger-whitespace-account-regex
                                      "\\s-*$")))
 
 (defun hledger-cur-line-emptyp ()
-  "Returns true if current line is empty."
+  "Return true if current line is empty."
   (hledger-cur-line-matchesp hledger-empty-regex))
 (defun hledger-cur-has-datep ()
-  "Returns true if current line has only date."
+  "Return true if current line has only date."
   (hledger-cur-line-matchesp hledger-date-only-regex))
 (defun hledger-cur-has-date-and-descp ()
-    "Returns tru if current line had date and description."
+    "Return tru if current line had date and description."
   (hledger-cur-line-matchesp hledger-date-and-desc-regex))
 (defun hledger-cur-has-empty-commentp ()
-  "Returns true if current line has an empty comment. Empty comments."
+  "Return true if current line has an empty comment.  Empty comments."
   (hledger-cur-line-matchesp hledger-empty-comment-regex))
 (defun hledger-cur-has-accp ()
-  "Returns true if the current line has an account name."
+  "Return true if the current line has an account name."
   (hledger-cur-line-matchesp hledger-whitespace-account-regex))
 (defun hledger-cur-starts-with-semicolp ()
-  "Returns true if the current line starts with a semicolon."
+  "Return true if the current line has a semicolon in the beginning."
   (hledger-cur-line-matchesp hledger-comment-regex))
 
 (defun hledger-prev-line-emptyp ()
-  "Returns true if previous line is empty."
+  "Return true if previous line is empty."
   (hledger-prev-line-matchesp hledger-empty-regex))
 (defun hledger-prev-has-datep ()
-  "Returns true if previous line has date and description."
+  "Return true if previous line has date and description."
   (hledger-prev-line-matchesp hledger-date-and-desc-regex))
 (defun hledger-prev-has-commentp ()
-  "Returns true if previousl line has an empty comment. Empty or otherwise."
+  "Return true if previousl line has an empty comment.  Empty or otherwise."
   (hledger-prev-line-matchesp hledger-comment-regex))
 (defun hledger-prev-has-accp ()
-  "Returns true if the previous line has an account name."
+  "Return true if the previous line has an account name."
   (hledger-prev-line-matchesp hledger-whitespace-account-regex))
   
 (defun hledger-indent-empty-line ()
@@ -191,8 +189,9 @@ RE."
    ((hledger-cur-has-accp) (hledger-indent-account-line))))
 
 (defun hledger-indent-region-function (start end)
-  "Function to indent a region. We need a separate function because we
-do different stuff while interactively editing an entry."
+  "Indent region (START END) according to `hledger-mode'.
+We need a separate function because we do different stuff while
+interactively editing an entry."
   (save-excursion
     (goto-char start)
     (while (< (point) end)
@@ -211,7 +210,7 @@ do different stuff while interactively editing an entry."
       (beginning-of-line)
       (while (not (looking-at hledger-date-and-desc-regex))
         (forward-line -1))
-      ;; Update the date to today after each toggle 
+      ;; Update the date to today after each toggle
       (search-forward-regexp hledger-date-regex nil t)
       (delete-region (line-beginning-position) (point))
       (hledger-insert-date)

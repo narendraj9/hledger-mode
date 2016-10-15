@@ -5,7 +5,7 @@
 ;; URL: https://github.com/narendraj9/hledger-mode.git
 ;; Version: 0.1
 ;; Keywords: data
-;; Package-Requires: ((emacs "24.4") (popup "0.5.3"))
+;; Package-Requires: ((emacs "24.4") (popup "0.5.3") (async "1.9"))
 
 ;;; Commentary:
 ;;
@@ -17,39 +17,34 @@
 ;;; Code:
 
 (require 'hledger-core)
-(require 'hledger-helpers)
+(require 'hledger-defuns)
 (require 'hledger-reports)
 (require 'hledger-mail)
 (require 'hledger-webservice)
-
-(add-to-list 'auto-mode-alist '("\\.journal\\'" . hledger-mode))
 
 (defgroup hledger nil
   "Customization group hledger-mode."
   :group 'data)
 
 (defcustom hledger-mode-hook nil
-  "Normal hook for entering hledger-mode."
+  "Normal hook for entering ‘hledger-mode’."
   :type 'hook
   :group 'hledger)
-
-(defvar ac-sources nil
-  "Sources for completion.")
 
 (defvar hledger-accounts-cache nil
   "List of accounts cached for ac and company modes.")
 
-(defvar ac-source-hledger-source
+(defvar hledger-ac-source
   `((init . hledger-get-accounts)
     (candidates . hledger-accounts-cache))
   "A source for completing account names in a hledger buffer.")
 
-(defun company-hledger (command &optional arg &rest ignored)
-  "Company backend for hledger-mode.
+(defun hledger-company (command &optional arg &rest ignored)
+  "Company backend for ‘hledger-mode’.
 COMMAND, ARG and IGNORED the regular meanings."
   (interactive (list 'interactive))
   (pcase command
-    (`interactive (company-begin-backend 'company-hledger))
+    (`interactive (company-begin-backend 'hledger-company))
     (`prefix (and (eq major-mode 'hledger-mode)
                   (company-grab-symbol)))
     (`candidates
@@ -104,18 +99,16 @@ COMMAND, ARG and IGNORED the regular meanings."
 
 (defun hledger-mode-init ()
   "Function that does initial setup in the \"major-mode\" function."
-  (use-local-map hledger-mode-map)
-  (setq-local font-lock-defaults hledger-font-lock-defaults)
+  (setq font-lock-defaults hledger-font-lock-defaults)
   (setq-local indent-line-function 'hledger-indent-line)
   (setq-local indent-region-function 'hledger-indent-region-function)
-  (setq-local ac-sources '(ac-source-hledger-source))
   (setq-local comment-start "; ")
   (setq-local comment-end "")
   (electric-indent-local-mode -1)
   (setq hledger-accounts-cache (hledger-get-accounts)))
 
 ;;;###autoload
-(define-derived-mode hledger-mode prog-mode "HLedger" ()
+(define-derived-mode hledger-mode fundamental-mode "HLedger" ()
   "Major mode for editing journal files."
   :syntax-table hledger-mode-syntax-table
   (hledger-mode-init))
@@ -127,12 +120,9 @@ so that the key bindings are not shared between buffers that are used for
 viewing reports and the journal file. I require the same kind of syntax
 highlighting in both kinds of buffers."
   :syntax-table hledger-mode-syntax-table
-  (setq-local font-lock-defaults hledger-font-lock-defaults)
-  ;; Highlight current line for better readability
-  (hl-line-mode 1)
+  (setq font-lock-defaults hledger-font-lock-defaults)
   ;; Avoid wrapping lines in reports
-  (setq truncate-lines t)
-  (use-local-map hledger-view-mode-map))
+  (setq truncate-lines t))
 
 (provide 'hledger-mode)
 

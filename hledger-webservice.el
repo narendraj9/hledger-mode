@@ -22,7 +22,7 @@
 
 ;; This file contains function definitions that would help me fetch
 ;; entries stored in the hledger webapp hosted at
-;; https://services.vicarie.in 
+;; https://services.vicarie.in
 
 ;;; Code:
 
@@ -55,7 +55,7 @@
 
 
 (defun hledger-fetch-entries-insert (entries)
-  "Insert entries into a journal buffer."
+  "Insert ENTRIES into a journal buffer."
   (let ((result ""))
     (dolist (entry (reverse entries))
       (let ((description (cdr (assoc 'description entry)))
@@ -63,10 +63,10 @@
                       (cdr (assoc 'comment entry))))
             (postings (cdr (assoc 'postings entry)))
             (date (cdr (assoc 'date entry))))
-        (setf result 
-              (concat result 
-                      (format "%s %s\n%s" 
-                              date 
+        (setf result
+              (concat result
+                      (format "%s %s\n%s"
+                              date
                               description
                               comment)))
         (dolist (posting (append postings nil))
@@ -74,7 +74,7 @@
                 (amount (cdr (assoc 'amount posting))))
             (setf result
                   (concat result
-                          (format "    %s    %s %s\n" 
+                          (format "    %s    %s %s\n"
                                   account
                                   (if (string-match "[0-9]+" amount)
                                       hledger-currency-string
@@ -91,13 +91,12 @@
 
 (defun hledger-fetch-entries ()
   "Fetch journal entries from `hledger-service-url`.
-Show the results in the `hledger-reporting-buffer-name' buffer. 
-**This is a workaround**.
-"
+Show the results in the `hledger-reporting-buffer-name' buffer.
+**This is a workaround**."
   (interactive)
   (browse-url hledger-service-fetch-url)
   (read-from-minibuffer "Opening browser. Hit [Enter] after copy. ")
-  (with-temp-buffer 
+  (with-temp-buffer
     (yank)
     (goto-char (point-min))
     ;; Convert vector returned by json-read to a list

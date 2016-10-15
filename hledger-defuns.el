@@ -1,4 +1,4 @@
-;;; hledger-helpers.el --- Helper functions for hledger-mode.el  -*- lexical-binding: t; -*-
+;;; hledger-defuns.el --- Helper functions for hledger-mode.el  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2016  Narendra Joshi
 
@@ -26,35 +26,34 @@
 ;;; Code:
 
 (eval-when-compile
-  (require 'cl))
-
+  (require 'cl-lib))
 (require 'popup)
 
 (defun hledger-ret-command ()
-  "Commands run on <return> in hledger-mode."
+  "Commands run on <return> in ‘hledger-mode’."
   (interactive)
   (newline-and-indent))
 
 (defun hledger-backtab-command ()
-  "Commands runon <backtab> in hledger-mode."
+  "Commands runon <backtab> in ‘hledger-mode’."
   (interactive)
   (backward-delete-char-untabify tab-width))
 
 (defun hledger-kill-reporting-window ()
-  "Kills the reporting buffer and window."
+  "Kill the reporting buffer and window."
   (interactive)
   (if (>= (length (window-list)) 2)
       (kill-buffer-and-window)
     (kill-buffer)))
 
 (defun hledger-copy-to-clipboard ()
-  "Copies current buffer contents to clipboard"
+  "Copies current buffer contents to clipboard."
   (interactive)
   (clipboard-kill-ring-save (point-min) (point-max))
   (message "Buffer copied to clipboard"))
 
 (defun hledger-append-clipboard-to-journal ()
-  "Appends clipboard contents to journal file."
+  "Append clipboard contents to journal file."
   (interactive)
   (let ((entries (buffer-string)))
     (hledger-jentry)
@@ -62,7 +61,7 @@
     (format "Fetched entries appended.")))
 
 (defmacro hledger-as-command (name command)
-  "Wrapper macro for interactive key bindings."
+  "Define a function named NAME for hledger COMMAND."
   `(defun ,(intern (symbol-name name)) () (interactive)
           (setq hledger-last-run-time 0)
           (hledger-run-command ,command)
@@ -83,8 +82,7 @@
     (popup-tip result :margin t)))
 
 (defun hledger-move-line (count)
-  "Move to `count` lines relative to current line skipping all
-those which do not start with a word."
+  "Move COUNT lines skipping all empty lines."
   (forward-line count)
   (while (and (or (not (looking-at (concat hledger-whitespace-account-regex
                                            "\\|"
@@ -94,14 +92,14 @@ those which do not start with a word."
     (forward-line (if (> count 0) 1 -1))))
 
 (defun hledger-next-line ()
-  "Move to next line. See `hledger-move-line'."
+  "Move to next line.  See `hledger-move-line'."
   (interactive)
   (hledger-move-line 1))
 
 (defun hledger-prev-line ()
-  "Move to previous line. See `hledger-move-line'."
+  "Move to previous line.  See `hledger-move-line'."
   (interactive)
   (hledger-move-line -1))
 
-(provide 'hledger-helpers)
-;;; hledger-helpers.el ends here
+(provide 'hledger-defuns)
+;;; hledger-defuns.el ends here

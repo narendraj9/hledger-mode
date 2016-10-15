@@ -54,8 +54,8 @@
   :type 'string)
 
 (defcustom hledger-show-only-unstarred-p t
-  "Show only the un-tainted entries. 
-I taint entries with a star, to declare that they haven't been effective yet. "
+  "Show only the un-tainted entries.
+I taint entries with a star, to declare that they haven't been effective yet."
   :group 'hledger
   :type 'boolean)
 
@@ -85,13 +85,13 @@ I taint entries with a star, to declare that they haven't been effective yet. "
 
 (defcustom hledger-ratios-liquid-asset-accounts
   "assets:bank assets:wallet"
-  "Account names [separated by spaces] that contain your liquid assets"
+  "Account names [separated by spaces] that contain your liquid assets."
   :group 'hledger
   :type 'string)
 
 (defcustom hledger-ratios-essential-expense-accounts
   "expenses:housing expenses:eating expenses:family"
-  "Account names [separated by spaces] that contain non-disctrionary expenses"
+  "Account names [separated by spaces] that contain non-disctrionary expenses."
   :group 'hledger
   :type 'string)
 
@@ -109,8 +109,7 @@ I taint entries with a star, to declare that they haven't been effective yet. "
 
 (defcustom hledger-account-balance-expand-face
   '(:foreground "Cornsilk" :background "DarkSlateGray")
-  "Face for the momentary text that expands account balances of
-  the present month interval."
+  "Face for the expanded account names with their balances in current period."
   :group 'hledger
   :type 'face)
 
@@ -121,21 +120,21 @@ I taint entries with a star, to declare that they haven't been effective yet. "
   "Last month on which a command was run.")
 
 (defun hledger-format-time (time)
-  "Format time in \"%Y-%m-%d\" "
+  "Format TIME in \"%Y-%m-%d\"."
   (format-time-string "%Y-%m-%d" time))
 
 (defun hledger-end-date (time)
-  "Format time so that it can be used as an inclusive --end date."
+  "Format TIME so that it can be used as an inclusive --end date."
   (let ((next-day (time-add time
                             (days-to-time 1))))
     (hledger-format-time next-day)))
 
 (defun hledger-friendlier-time (time)
-  "Format for the user to understand: %e %B %Y"
+  "Format TIME for the user to understand: %e %B %Y."
   (format-time-string "%e %B %Y" time))
 
 (defun hledger-nth-of-mth-month (n m)
-  "Returns the nth of the mth month. Current month is the zeroth."
+  "Return the Nth of the Mth month.  Current month is the zeroth."
   (let* ((time (time-add (current-time)
                          (days-to-time (* 30 m))))
          (day (string-to-number (format-time-string "%d" time)))
@@ -144,15 +143,16 @@ I taint entries with a star, to declare that they haven't been effective yet. "
     (time-add time delta-time)))
 
 (defun hledger-nth-of-this-month (n)
-  "Returns the time value for the nth day of the current month"
+  "Return the time value for the Nth day of the current month."
   (hledger-nth-of-mth-month n 0))
 
 (defun hledger-nth-of-prev-month (n)
-  "Returns the nth day's time for the previous month."
+  "Return the Nth day's time for the previous month."
   (hledger-nth-of-mth-month n -1))
 
 (defun hledger-shell-command-to-string (command-string)
-  (shell-command-to-string (concat "hledger -f "
+  "Return the result of running COMMAND-STRING has an hledger command."
+(shell-command-to-string (concat "hledger -f "
                                    (shell-quote-argument hledger-jfile)
                                    " "
                                    command-string)))
@@ -167,7 +167,7 @@ I taint entries with a star, to declare that they haven't been effective yet. "
     (ignore)))
 
 (defun hledger-go-to-starting-line ()
-  "Function to go the first line that stars a new entry. Cleans up whitespace."
+  "Function to go the first line that stars a new entry.  Cleans up whitespace."
   (goto-char (point-max))
   (beginning-of-line)
   (while (looking-at hledger-empty-regex)
@@ -179,8 +179,15 @@ I taint entries with a star, to declare that they haven't been effective yet. "
 (defun hledger-get-perfin-buffer (&optional keep-bufferp fetched-entriesp)
   "Get/create the `hledger-reporting-buffer-name' buffer.
 If the buffer is not intended for editing, then `q` closes it.
-`C-c y` copies the whole buffer to clipboard.
-FIXME: Query emacs for the keys for the functions."
+`C-c y` copies the whole buffer to clipboard.  FIXME: Query Emacs
+for the keys for the functions.
+
+Optional argument KEEP-BUFFERP
+if non-nil the `hledger-reporting-buffer-name' is re-used without
+erasing its contents.
+
+Optional argument FETCHED-ENTRIESP if
+non-nil, it lands us in the `hledger-mode' ."
   (let ((jbuffer (get-buffer-create hledger-reporting-buffer-name)))
     (with-current-buffer jbuffer
       (if fetched-entriesp
@@ -192,14 +199,14 @@ FIXME: Query emacs for the keys for the functions."
 
 
 (defun hledger-jentry ()
-  "Make a new entry in the financial journal. Avoids editing old entries."
+  "Make a new entry in the financial journal.  Avoids editing old entries."
   (interactive)
   (find-file hledger-jfile)
   (hledger-go-to-starting-line)
   (recenter))
 
 (defun hledger-run-command (command)
-  "Runs an hledger command."
+  "Run an hledger COMMAND."
   (interactive (list (completing-read "jdo> " hledger-jcompletions)))
   (hledger-ask-and-save-buffer)
   (let ((inhibit-read-only t))
@@ -216,7 +223,7 @@ FIXME: Query emacs for the keys for the functions."
     (setq hledger-last-run-time 0)))
 
 (defun hledger-get-accounts ()
-  "Returns list of account names"
+  "Return list of account names."
   (let* ((hledger-jfile (buffer-file-name))
          (accounts-string (shell-command-to-string
                            (concat "hledger -f" hledger-jfile " accounts")))
@@ -224,10 +231,10 @@ FIXME: Query emacs for the keys for the functions."
     accounts-list))
 
 (defun hledger-jdo (command &optional keep-bufferp bury-bufferp)
-  "Run a hledger command on the journal file.
+  "Run a hledger COMMAND on the journal file.
 Returns the buffer with the info inserted.
 
-If KEEP-BUFFERP is non-nil, it won't erase the old contents. New
+If KEEP-BUFFERP is non-nil, it won't erase the old contents.  New
 info would be prepended to the old one.
 
 If BURY-BUFFERP is t, the `hledger-reporting-buffer-name' buffer
@@ -235,7 +242,7 @@ would not be showm to the user, this is user for using this
 function in elisp only for the buffer contents.
 
 The position of point remains unaltered after this function
-call. This is for letting the caller transform the output more
+call.  This is for letting the caller transform the output more
 easily."
   (let ((jbuffer (hledger-get-perfin-buffer keep-bufferp))
         (jcommand (concat "hledger -f "
@@ -246,7 +253,7 @@ easily."
       (let ((here (point)))
         (call-process-shell-command jcommand nil t nil)
         ;; Keep the pointer where it was before executing the hledger command
-        (goto-char here))      
+        (goto-char here))
       (if bury-bufferp
           (bury-buffer jbuffer)
         (pop-to-buffer jbuffer)
@@ -258,7 +265,7 @@ easily."
     jbuffer))
 
 (defun hledger-jreg (pattern)
-  "Run hledger register command."
+  "Run hledger register command with PATTERN as argument."
   (interactive "spattern> ")
   (let ((jcmd (concat "register -w 150 " pattern)))
     (hledger-jdo jcmd)
@@ -266,7 +273,7 @@ easily."
 
 (defun hledger-daily-report ()
   "Report for today's expenses.
-This is subject to change based on what things I am budgeting on. 
+This is subject to change based on what things I am budgeting on.
 See `hledger-daily-report-accounts'."
   (interactive)
   (with-current-buffer (hledger-get-perfin-buffer)
@@ -282,9 +289,11 @@ See `hledger-daily-report-accounts'."
     (goto-char (point-min))))
 
 (defun hledger-monthly-incomestatement (&optional hide-header-p)
-  "Incomestatement report but monthly.  You can have move back
-and forth in time in the personal finance buffer. I feel that the
-complete incomestatement isn't much useful for me. "
+  "Incomestatement report but monthly.
+You can have move back
+and forth in time in the personal finance buffer.  I feel that the
+complete incomestatement isn't much useful for me.
+Optional argument HIDE-HEADER-P if non-nil, header line showing duration isn't shown."
   (interactive)
   (let* ((beg-time (hledger-nth-of-prev-month hledger-reporting-day))
          (end-time (hledger-nth-of-this-month hledger-reporting-day))
@@ -308,7 +317,7 @@ complete incomestatement isn't much useful for me. "
               (forward-line))
             (sort-numeric-fields 2 beg (point))
             (reverse-region beg (point)))))
-      ;; Same thing again. Need to abstract this sorting stuff. 
+      ;; Same thing again. Need to abstract this sorting stuff.
       (when (search-forward "Expenses:")
         (forward-line)
         (unless (looking-at "--")
@@ -321,7 +330,13 @@ complete incomestatement isn't much useful for me. "
       (insert "\n\n"))))
 
 (defun hledger-running-report (&optional keep-bufferp bury-bufferp)
-  "Show the balance report for the past 5 months."
+  "Show the balance report for the past 5 months.
+
+Optional argument KEEP-BUFFERP if non-nil, the reporting buffer's
+old contents are kept intact.
+
+Optional argument BURY-BUFFERP if non-nil, the reporting buffer
+isn't switched to."
   (interactive)
   (let* ((beg-time-string (hledger-format-time (hledger-nth-of-mth-month
                                                 hledger-reporting-day
@@ -366,25 +381,28 @@ complete incomestatement isn't much useful for me. "
                    bury-bufferp))))
 
 (defun hledger-compute-total (accounts-string &optional beg  end)
-  "Computes the total for given accounts.
+  "Computes the total for given accounts in ACCOUNTS-STRING.
 This function depends upon how `hledger-bin' prints data to the console.
-If that changes, things will break. BEG and END are dates."
+If that changes, things will break.  BEG and END are dates."
   (let* ((date-now (hledger-end-date (current-time)))
          (output (hledger-shell-command-to-string
                   (concat " balance "
                           accounts-string
-                          (if beg (concat " --begin " beg) "") 
+                          (if beg (concat " --begin " beg) "")
                           " --end " (or end date-now)
                           " --depth 1"))))
     (string-to-number (nth 1 (split-string output)))))
 
 (defun hledger-compute-totals (accounts-list &optional beg end)
-  "Computes the total for a list of accounts. See `hledger-compute-total'."
+  "Computes the total for a list of accounts in ACCOUNTS-LIST.
+See `hledger-compute-total'.
+Optional argument BEG beginning date string for journal entries to consider.
+Optional argument END end date string for journal entries to consider."
   (let* ((date-now (hledger-end-date (current-time)))
          (output (hledger-shell-command-to-string
                   (concat " balance "
                           (mapconcat 'identity accounts-list " ")
-                          (if beg (concat " --begin " beg) "") 
+                          (if beg (concat " --begin " beg) "")
                           " --end " (or end date-now)
                           " --depth 1"
                           " --format "
@@ -406,20 +424,18 @@ Computes the emergency fund ratio for the current month.
 EFR = (Current liquid assets)/(Monthly essential expenses)
 
 I consider expenses on housing, eating and family to be
-non-discretionary. Shoot for keeping it 6. Too high isn't
-efficient. Too low isn't safe.
+non-discretionary.  Shoot for keeping it 6. Too high isn't
+efficient.  Too low isn't safe.
 
 Computes the current ratio which gives you an estimate of how your current
-asset vs liability situation is. Current ratio = assets / liabilities
+asset vs liability situation is.  Current ratio = assets / liabilities
 
 Debt ratio = liabilities / assets
 
 Returns a plist of the ratios.
 
-Note: Currently this is extermely inefficient. It spawns hledger
-three times.
-
-"
+Note: Currently this is extermely inefficient.  It spawns hledger
+three times."
   (interactive)
   (let* ((reporting-date-an-year-ago (hledger-format-time (hledger-nth-of-mth-month
                                                            hledger-reporting-day
@@ -470,7 +486,7 @@ three times.
 
 
 (defun hledger-summarize-ratios (ratios)
-  "Return a string summary of RATIOS"
+  "Return a string summary of RATIOS."
   (let ((efr (plist-get ratios 'efr))
         (cr (plist-get ratios 'cr))
         (dr (plist-get ratios 'dr))
@@ -507,15 +523,15 @@ three times.
         (goto-char (point-min))
         (forward-line 2)
         (insert (format "
-╔══════════════════════════════════════╦══════════════════════════════════════════╗ 
+╔══════════════════════════════════════╦══════════════════════════════════════════╗
 
    Emergency Fund Ratio: %-18.2fSavings Ratio: %.2f
-   Current Ratio: %-25.2fAverage Income: ₹ %.0f/month                        
-   Debt Ratio: %-28.2fAverage Expenses: ₹ %.0f/month           
+   Current Ratio: %-25.2fAverage Income: ₹ %.0f/month
+   Debt Ratio: %-28.2fAverage Expenses: ₹ %.0f/month
 
 ╚══════════════════════════════════════╩══════════════════════════════════════════╝
                                                                
-"                                                             
+"
                         efr sr
                         cr  avg-income
                         dr  avg-expenses))
@@ -533,7 +549,7 @@ three times.
       (message "Done!"))))
 
 (defun hledger-run-fn-for-month (m command)
-  "Runs a COMMAND for Mth month.
+  "Run for Mth month, hledger command string COMMAND.
 This is the reason dynamic scoping is cool sometimes."
   (cl-letf (((symbol-function 'current-time)
              (let ((time (hledger-nth-of-mth-month
@@ -543,7 +559,7 @@ This is the reason dynamic scoping is cool sometimes."
     (funcall command)))
 
 (defun hledger-run-fn-for-day (m command)
-  "Runs a COMMAND for Mth day relative to today."
+  "Run for Mth day relative to today, hledger command string COMMAND."
   (cl-letf (((symbol-function 'current-time)
              (let ((time (time-add
                           (current-time)
@@ -562,7 +578,7 @@ This is the reason dynamic scoping is cool sometimes."
                               (hledger-run-command command))))
 
 (defun hledger-generate-report-header (beg-time end-time)
-  "Generates report header with dates."
+  "Generate report header with dates between times BEG-TIME and END-TIME."
   (let* ((header-dates (format "%s - %s"
                                (format-time-string "%e %b %Y" beg-time)
                                (format-time-string "%e %b %Y" end-time)))
@@ -634,7 +650,7 @@ See `hledger-prev-report'."
                                       hledger-last-run-command))))
 
 (defun hledger-present-report ()
-  "Resets time for the current report.
+  "Reset time for the current report.
 See `hledger-prev-report'."
   (interactive)
   (setq hledger-last-run-time 0)
@@ -652,7 +668,7 @@ See `hledger-prev-report'."
                          '(read-only t front-sticky t))))
 
 (defun hledger-get-top-level-acount (acc-string)
-  "Returns the top-level account as a symbol from ACC-STRING."
+  "Return the top level account as a symbol from ACC-STRING."
   (car (split-string acc-string ":")))
 
 (provide 'hledger-reports)
