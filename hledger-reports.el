@@ -310,7 +310,7 @@ Optional argument HIDE-HEADER-P if non-nil, header line showing duration isn't s
                            beg-time-string
                            end-time-string)
                    t)
-      
+
       ;; Sort revenues | Ignore errors encountered during this.
       (ignore-errors (when (search-forward "Revenues:")
                        (forward-line)
@@ -534,7 +534,7 @@ three times."
    Debt Ratio: %-28.2fAverage Expenses: ₹ %.0f/month
 
 ╚══════════════════════════════════════╩══════════════════════════════════════════╝
-                                                               
+
 "
                         efr sr
                         cr  avg-income
@@ -651,6 +651,15 @@ See `hledger-prev-report'."
   (interactive)
   (let ((hledger-last-run-time (1+ hledger-last-run-time)))
     (hledger-prev-report)))
+
+
+(defun hledger-report-ending-today ()
+  "Refresh report showing balances till today.
+Usually, the balance shown are upto the the last
+`hledger-reporting-date' starting the same date of the previous month."
+  (interactive)
+  (let ((hledger-reporting-day (string-to-number (format-time-string "%d"))))
+    (hledger-refresh-buffer)))
 
 (defun hledger-present-report ()
   "Reset time for the current report.
