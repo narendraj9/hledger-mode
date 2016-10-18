@@ -120,5 +120,22 @@
                                 "Press 's' to hide")
     (message "Overall report hasn't been compiled yet.")))
 
+
+(defun hledger-reschedule ()
+  "Reschedule the transaction at point.
+Note: This function uses `org-read-date'."
+  (interactive)
+  (save-excursion
+    (let ((new-date (org-read-date)))
+      (forward-line 0)
+      (when (not (looking-at hledger-date-regex))
+        (search-backward-regexp hledger-date-regex))
+      ;; Erase the old date
+      (delete-region (line-beginning-position)
+                     (search-forward-regexp hledger-date-regex))
+      ;; Insert the new date
+      (insert new-date))))
+
+
 (provide 'hledger-defuns)
 ;;; hledger-defuns.el ends here
