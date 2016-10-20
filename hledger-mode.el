@@ -108,6 +108,7 @@ COMMAND, ARG and IGNORED the regular meanings."
   (setq-local indent-region-function 'hledger-indent-region-function)
   (setq-local comment-start "; ")
   (setq-local comment-end "")
+  (setq require-final-newline t)
   (electric-indent-local-mode -1)
   (setq hledger-accounts-cache (hledger-get-accounts)))
 
