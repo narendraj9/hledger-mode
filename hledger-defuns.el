@@ -74,8 +74,7 @@
     ;; Show key binding for single character keys
     (map-keymap (lambda (k v)
                   (when (and (characterp k)
-                             (<= k ?z)
-                             (>= k ?a))
+                             (symbolp v))
                     (setq result
                           (concat result
                                   (format "%c %s\n"

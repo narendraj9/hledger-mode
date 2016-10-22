@@ -1,4 +1,4 @@
-# Hledger-mode
+# hledger-mode
 
 [![MELPA](https://melpa.org/packages/hledger-mode-badge.svg)](https://melpa.org/#/hledger-mode)
 
