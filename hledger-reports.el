@@ -530,15 +530,15 @@ three times."
 ╔══════════════════════════════════════╦══════════════════════════════════════════╗
 
    Emergency Fund Ratio: %-18.2fSavings Ratio: %.2f
-   Current Ratio: %-25.2fAverage Income: ₹ %.0f/month
-   Debt Ratio: %-28.2fAverage Expenses: ₹ %.0f/month
+   Current Ratio: %-25.2fAverage Income: %s %.0f/month
+   Debt Ratio: %-28.2fAverage Expenses: %s %.0f/month
 
 ╚══════════════════════════════════════╩══════════════════════════════════════════╝
 
 "
                         efr sr
-                        cr  avg-income
-                        dr  avg-expenses))
+                        cr  hledger-currency-string avg-income
+                        dr  hledger-currency-string avg-expenses))
         ;; Let's update the ratios summary
         (setq hledger-ratios-summary summary)
         (setq hledger-ratios-summary-point (point)))
