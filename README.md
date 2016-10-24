@@ -4,6 +4,8 @@
 
 A mode for writing hledger journals with a set of useful reports.
 
+![Sample Reports](_assets/sample_reports.gif?raw=true "Reports")
+
 ## Installation
 
 It's available on [MELPA](http://melpa.org/):
