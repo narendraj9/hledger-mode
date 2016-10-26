@@ -280,16 +280,27 @@ This is subject to change based on what things I am budgeting on.
 See `hledger-daily-report-accounts'."
   (interactive)
   (with-current-buffer (hledger-get-perfin-buffer)
-    (let ((beg-time-string (hledger-format-time (current-time)))
-          (end-time-string (hledger-end-date (current-time)) ))
+    (let ((reporting-since (hledger-compute-last-reporting-time))
+          (beg-time-string (hledger-format-time (current-time)))
+          (end-time-string (hledger-end-date (current-time))))
       (hledger-jdo (format "balance %s --begin %s --end %s"
                            hledger-daily-report-accounts
                            beg-time-string
-                           end-time-string)))
-    (goto-char (point-min))
-    (insert (concat "Today you spent:\n"
-                    "===============\n"))
-    (goto-char (point-min))))
+                           end-time-string))
+      (goto-char (point-min))
+      (insert (concat "Today you spent:\n"
+                      "===============\n"))
+      (goto-char (point-max))
+      (insert (concat "\n\nSince "
+                      (hledger-friendlier-time reporting-since)
+                      "\n=====================\n"))
+      (let ((beg-time-string (hledger-format-time ()))))
+      (hledger-jdo (format "balance %s --begin %s --end %s"
+                           hledger-daily-report-accounts
+                           (hledger-format-time reporting-since)
+                           (hledger-end-date (current-time)))
+                   t)
+      (goto-char (point-min)))))
 
 (defun hledger-monthly-incomestatement (&optional hide-header-p)
   "Incomestatement report but monthly.
@@ -384,6 +395,15 @@ isn't switched to."
                    t
                    bury-bufferp))))
 
+
+(defun hledger-compute-last-reporting-time ()
+    "Return the time since when we are preparing the report."
+    (let ((day (string-to-number (format-time-string "%d"))))
+      (if (> day hledger-reporting-day)
+          (hledger-nth-of-this-month hledger-reporting-day)
+        (hledger-nth-of-prev-month hledger-reporting-day))))
+
+
 (defun hledger-compute-total (accounts-string &optional beg  end)
   "Computes the total for given accounts in ACCOUNTS-STRING.
 This function depends upon how `hledger-bin' prints data to the console.
@@ -399,7 +419,7 @@ If that changes, things will break.  BEG and END are dates."
 
 (defun hledger-compute-totals (accounts-list &optional beg end)
   "Computes the total for a list of accounts in ACCOUNTS-LIST.
-See `hledger-compute-total'.
+sSee `hledger-compute-total'.
 Optional argument BEG beginning date string for journal entries to consider.
 Optional argument END end date string for journal entries to consider."
   (let* ((date-now (hledger-end-date (current-time)))
