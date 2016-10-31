@@ -137,13 +137,16 @@ I taint entries with a star, to declare that they haven't been effective yet."
   (format-time-string "%e %B %Y" time))
 
 (defun hledger-nth-of-mth-month (n m)
-  "Return the Nth of the Mth month.  Current month is the zeroth."
-  (let* ((time (time-add (current-time)
-                         (days-to-time (* 30 m))))
-         (day (string-to-number (format-time-string "%d" time)))
-         (delta-time (days-to-time (- n
-                                      day))))
-    (time-add time delta-time)))
+  "Return the Nth of the Mth month.  Current month is the zeroth.
+
+Note: uses `calendar-increment-month' to go back and forth in
+time."
+  (let* ((time-now (current-time))
+         (year-now (string-to-number (format-time-string "%Y" time-now)))
+         (month-now (string-to-number (format-time-string "%m" time-now))))
+    (calendar-increment-month month-now year-now m)
+    ;; Now, we want the Nth of month-now and year-now.
+    (encode-time 0 0 0 n month-now year-now)))
 
 (defun hledger-nth-of-this-month (n)
   "Return the time value for the Nth day of the current month."
@@ -289,11 +292,14 @@ See `hledger-daily-report-accounts'."
                            end-time-string))
       (goto-char (point-min))
       (insert (concat "Today you spent:\n"
-                      "===============\n"))
+                      (make-string 20 ?=)
+                      "\n"))
       (goto-char (point-max))
       (insert (concat "\n\nSince "
                       (hledger-friendlier-time reporting-since)
-                      "\n=====================\n"))
+                      "\n"
+                      (make-string 20 ?=)
+                      "\n"))
       (let ((beg-time-string (hledger-format-time ()))))
       (hledger-jdo (format "balance %s --begin %s --end %s"
                            hledger-daily-report-accounts
@@ -570,7 +576,7 @@ three times."
 This is the reason dynamic scoping is cool sometimes."
   (cl-letf (((symbol-function 'current-time)
              (let ((time (hledger-nth-of-mth-month
-                          (string-to-number (format-time-string "%d" (current-time)))
+                          hledger-reporting-day
                           m)))
                `(lambda () ',time))))
     (funcall command)))
