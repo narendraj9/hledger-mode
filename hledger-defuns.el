@@ -29,7 +29,6 @@
   (require 'cl-lib))
 (require 'popup)
 
-
 (defcustom hledger-display-percentage-face
   '(:foreground "Cornsilk" :background "DarkSlateGray")
   "Face for showing the percentage of a set of balances around
@@ -37,6 +36,21 @@
   :group 'hledger
   :type 'face)
 
+(defcustom hledger-percentage-chart-char
+  ?█
+  "Character to use for drawing the percentage chart."
+  :group 'hledger
+  :type 'char)
+
+(defcustom hledger-show-percentage-chart
+  nil
+  "Boolean to decide if we show the chart alongside percentages."
+  :group 'hledger
+  :type 'boolean)
+
+(defcustom hledger-percentage-chart-width
+  20
+  "Width of the percentage chart.")
 
 (defun hledger-ret-command ()
   "Commands run on <return> in ‘hledger-mode’."
@@ -152,18 +166,18 @@ Note: This function uses `org-read-date'."
 (defun hledger-display-percentages ()
   "Display percentages for the balances around the point."
   (interactive)
-  (let ((beg (save-excursion
-               (while (looking-at hledger-whitespace-amount-regex)
-                 (forward-line -1))
-               (forward-line)
-               (point)))
-        (end (save-excursion
-               (while (looking-at hledger-whitespace-amount-regex)
-                 (forward-line))
-               (forward-line -1)
-               (end-of-line)
-               (point)))
-        (amounts '()))
+  (let* ((beg (save-excursion
+                (while (looking-at hledger-whitespace-amount-regex)
+                  (forward-line -1))
+                (forward-line)
+                (point)))
+         (end (save-excursion
+                (while (looking-at hledger-whitespace-amount-regex)
+                  (forward-line))
+                (forward-line -1)
+                (end-of-line)
+                (point)))
+         (amounts '()))
     (if hledger-display-percentages
         (progn (remove-overlays beg (1+ end))
                (setq hledger-display-percentages nil))
@@ -179,14 +193,28 @@ Note: This function uses `org-read-date'."
         (goto-char beg)
         (let ((amounts-sum (reduce '+ amounts)))
           (dolist (amount amounts)
+            ;; Overlay for display the percentage
             (overlay-put (make-overlay (line-beginning-position)
                                        (line-beginning-position))
                          'after-string
-                         (propertize (format "  %5.2f%% "
+                         (propertize (format (concat "  %5.2f%% %-"
+                                                     (number-to-string
+                                                      (if hledger-show-percentage-chart
+                                                          hledger-percentage-chart-width
+                                                        0))
+                                                     "s")
                                              (* (/ amount amounts-sum)
-                                                100.0))
+                                                100.0)
+
+                                             (make-string
+                                              (if hledger-show-percentage-chart
+                                                  (round (* (/ amount amounts-sum)
+                                                            hledger-percentage-chart-width))
+                                                0)
+                                              hledger-percentage-chart-char))
                                      'font-lock-face
                                      hledger-display-percentage-face))
+
             (forward-line))))
       (setq hledger-display-percentages t))))
 
