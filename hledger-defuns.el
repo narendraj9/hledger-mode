@@ -29,6 +29,15 @@
   (require 'cl-lib))
 (require 'popup)
 
+
+(defcustom hledger-display-percentage-face
+  '(:foreground "Cornsilk" :background "DarkSlateGray")
+  "Face for showing the percentage of a set of balances around
+  point."
+  :group 'hledger
+  :type 'face)
+
+
 (defun hledger-ret-command ()
   "Commands run on <return> in ‘hledger-mode’."
   (interactive)
@@ -134,6 +143,52 @@ Note: This function uses `org-read-date'."
                      (search-forward-regexp hledger-date-regex))
       ;; Insert the new date
       (insert new-date))))
+
+
+(defvar hledger-display-percentages nil
+  "Variable accompanying `hledger-display-percentags' function to
+  maintain state."  )
+
+(defun hledger-display-percentages ()
+  "Display percentages for the balances around the point."
+  (interactive)
+  (let ((beg (save-excursion
+               (while (looking-at hledger-whitespace-amount-regex)
+                 (forward-line -1))
+               (forward-line)
+               (point)))
+        (end (save-excursion
+               (while (looking-at hledger-whitespace-amount-regex)
+                 (forward-line))
+               (forward-line -1)
+               (end-of-line)
+               (point)))
+        (amounts '()))
+    (if hledger-display-percentages
+        (progn (remove-overlays beg (1+ end))
+               (setq hledger-display-percentages nil))
+      (save-excursion
+        (goto-char end)
+        (while (re-search-backward hledger-amount-regex beg t)
+          (push (string-to-number (replace-regexp-in-string
+                                   hledger-currency-string
+                                   ""
+                                   (match-string 0)))
+                amounts))
+        ;; Now that we have the amounts. Let's create overlays.
+        (goto-char beg)
+        (let ((amounts-sum (reduce '+ amounts)))
+          (dolist (amount amounts)
+            (overlay-put (make-overlay (line-beginning-position)
+                                       (line-beginning-position))
+                         'after-string
+                         (propertize (format "  %5.2f%% "
+                                             (* (/ amount amounts-sum)
+                                                100.0))
+                                     'font-lock-face
+                                     hledger-display-percentage-face))
+            (forward-line))))
+      (setq hledger-display-percentages t))))
 
 
 (provide 'hledger-defuns)

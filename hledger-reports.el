@@ -200,7 +200,8 @@ non-nil, it lands us in the `hledger-mode' ."
           (progn
             (hledger-mode))
         (hledger-view-mode))
-      (or keep-bufferp (delete-region (point-min) (point-max))))
+      (or keep-bufferp (progn (delete-region (point-min) (point-max))
+                              (delete-all-overlays))))
     jbuffer))
 
 

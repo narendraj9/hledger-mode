@@ -88,6 +88,7 @@ COMMAND, ARG and IGNORED the regular meanings."
     (define-key map (kbd "s") 'hledger-summarize)
     (define-key map (kbd "n") 'hledger-next-line)
     (define-key map (kbd "p") 'hledger-prev-line)
+    (define-key map (kbd "%") 'hledger-display-percentages)
     map))
 
 (defconst hledger-font-lock-keywords-1
