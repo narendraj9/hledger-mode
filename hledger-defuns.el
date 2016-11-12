@@ -36,6 +36,12 @@
   :group 'hledger
   :type 'face)
 
+(defcustom hledger-percentage-chart-face
+  '(:foreground "Cornsilk" :background "DarkSlateGray")
+  "Face for showing the percentage chart."
+  :group 'hledger
+  :type 'face)
+
 (defcustom hledger-percentage-chart-char
   ?█
   "Character to use for drawing the percentage chart."
@@ -191,29 +197,33 @@ Note: This function uses `org-read-date'."
                 amounts))
         ;; Now that we have the amounts. Let's create overlays.
         (goto-char beg)
-        (let ((amounts-sum (reduce '+ amounts)))
+        (let ((amounts-sum (reduce '+ amounts))
+              (hledger-pchart-format
+               (concat "%-"
+                       (number-to-string hledger-percentage-chart-width)
+                       "s")))
           (dolist (amount amounts)
             ;; Overlay for display the percentage
             (overlay-put (make-overlay (line-beginning-position)
                                        (line-beginning-position))
                          'after-string
-                         (propertize (format (concat "  %5.2f%% %-"
-                                                     (number-to-string
-                                                      (if hledger-show-percentage-chart
-                                                          hledger-percentage-chart-width
-                                                        0))
-                                                     "s")
-                                             (* (/ amount amounts-sum)
-                                                100.0)
-
-                                             (make-string
-                                              (if hledger-show-percentage-chart
-                                                  (round (* (/ amount amounts-sum)
-                                                            hledger-percentage-chart-width))
-                                                0)
-                                              hledger-percentage-chart-char))
-                                     'font-lock-face
-                                     hledger-display-percentage-face))
+                         (concat
+                          ;; Percentages
+                          (propertize (format "  %5.2f%% "
+                                              (* (/ amount amounts-sum)
+                                                 100.0))
+                                      'font-lock-face
+                                      hledger-display-percentage-face)
+                          ;; Percentage chart
+                          (propertize
+                           (if hledger-show-percentage-chart
+                               (format hledger-pchart-format
+                                       (make-string
+                                        (round (* (/ amount amounts-sum)
+                                                  hledger-percentage-chart-width))
+                                        hledger-percentage-chart-char))
+                             "")
+                           'font-lock-face hledger-percentage-chart-face)))
 
             (forward-line))))
       (setq hledger-display-percentages t))))
