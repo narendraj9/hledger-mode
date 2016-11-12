@@ -48,7 +48,7 @@
   :type 'char)
 
 (defcustom hledger-show-percentage-chart
-  nil
+  t
   "Boolean to decide if we show the chart alongside percentages."
   :group 'hledger
   :type 'boolean)
@@ -247,7 +247,8 @@ This assumes that the amount value appears in the second column
 after the currency sign. So, it won't work for different
 commodities with differently positioned commodity signs."
   (interactive "P")
-  (let* ((beg-end (hledger-find-balance-delimits))
+  (let* ((inhibit-read-only t)
+         (beg-end (hledger-find-balance-delimits))
          (beg (car beg-end))
          (end (cdr beg-end)))
     (sort-numeric-fields 2 beg end)
