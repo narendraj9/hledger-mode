@@ -31,8 +31,7 @@
 
 (defcustom hledger-display-percentage-face
   '(:foreground "Cornsilk" :background "DarkSlateGray")
-  "Face for showing the percentage of a set of balances around
-  point."
+  "Face for showing the percentage of a set of balances around point."
   :group 'hledger
   :type 'face)
 
@@ -166,23 +165,36 @@ Note: This function uses `org-read-date'."
 
 
 (defvar hledger-display-percentages nil
-  "Variable accompanying `hledger-display-percentags' function to
-  maintain state."  )
+  "Variable accompanying `hledger-display-percentags' to maintain state.")
+
+
+(defun hledger-find-balance-delimits ()
+  "Return the beginning and end point positions for shown --flat bals.
+Returns a cons pair of the point values."
+  (let* ((beg (save-excursion
+                (while (and (looking-at hledger-whitespace-amount-regex)
+                            (not (bobp)))
+                  (forward-line -1))
+                (if (not (looking-at hledger-whitespace-amount-regex))
+                    (forward-line))
+                (point)))
+         (end (save-excursion
+                (while (and (looking-at hledger-whitespace-amount-regex)
+                            (not (eobp)))
+                  (forward-line))
+                (if (not (looking-at hledger-whitespace-amount-regex))
+                    (forward-line -1))
+                (end-of-line)
+                (point))))
+    (cons beg end)))
+
 
 (defun hledger-display-percentages ()
   "Display percentages for the balances around the point."
   (interactive)
-  (let* ((beg (save-excursion
-                (while (looking-at hledger-whitespace-amount-regex)
-                  (forward-line -1))
-                (forward-line)
-                (point)))
-         (end (save-excursion
-                (while (looking-at hledger-whitespace-amount-regex)
-                  (forward-line))
-                (forward-line -1)
-                (end-of-line)
-                (point)))
+  (let* ((beg-end (hledger-find-balance-delimits))
+         (beg (car beg-end))
+         (end (cdr beg-end))
          (amounts '()))
     (if hledger-display-percentages
         (progn (remove-overlays beg (1+ end))
@@ -227,6 +239,20 @@ Note: This function uses `org-read-date'."
 
             (forward-line))))
       (setq hledger-display-percentages t))))
+
+
+(defun hledger-sort-flat-balances (prefix)
+  "Sorts the flat balances according the amount value.
+This assumes that the amount value appears in the second column
+after the currency sign. So, it won't work for different
+commodities with differently positioned commodity signs."
+  (interactive "P")
+  (let* ((beg-end (hledger-find-balance-delimits))
+         (beg (car beg-end))
+         (end (cdr beg-end)))
+    (sort-numeric-fields 2 beg end)
+    (if (not prefix)
+        (reverse-region beg end))))
 
 
 (provide 'hledger-defuns)
