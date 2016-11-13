@@ -480,19 +480,21 @@ three times."
                                 hledger-ratios-essential-expense-accounts)
                           reporting-date-an-year-ago
                           reporting-date-now))
+
          ;; For average balances
-         (total-assets
+         (total-assets-accumulated-this-year
           (or (lax-plist-get totals-plist-1
                              (hledger-get-top-level-acount hledger-ratios-assets-accounts))
               0))
-         (total-income
+         (total-income-accumulated-this-year
           (or (lax-plist-get totals-plist-1
                              (hledger-get-top-level-acount hledger-ratios-income-accounts))
               0))
-         (total-expenses
+         (total-essential-expenses-this-year
           (or (lax-plist-get totals-plist-1
                              (hledger-get-top-level-acount hledger-ratios-essential-expense-accounts))
               0))
+
          ;; For current balances
          (totals-plist-2 (hledger-compute-totals
                           (list hledger-ratios-liquid-asset-accounts
@@ -505,15 +507,23 @@ three times."
           (or (lax-plist-get totals-plist-2
                              (hledger-get-top-level-acount hledger-ratios-debt-accounts))
               0))
-         (monthly-expenses (/ total-expenses 12))
-         (monthly-income (/ total-income 12.0))
-         (monthly-savings (/ total-assets 12.0)))
-    (list 'avg-income (* monthly-income 1.0)              ;; Monthly income
-          'avg-expenses (* monthly-expenses 1.0)          ;; Average expenses
-          'efr (/ liquid-assets (* monthly-expenses 1.0)) ;; Emergency-fund-ratio
-          'cr  (/ liquid-assets (* liabilities 1.0))      ;; Current ratio
-          'sr  (/ monthly-savings monthly-income)         ;; Savings ratio
-          'dr (/ liabilities (* liquid-assets 1.0)))))    ;; Debt ratio
+
+         ;; For ther rest
+         (total-assets (hledger-compute-total hledger-top-asset-account))
+         (total-expenses (hledger-compute-total hledger-top-expense-account
+                                                reporting-date-an-year-ago
+                                                reporting-date-now))
+
+         (monthly-total-expenses (/ total-expenses 12.0))
+         (monthly-essential-expenses (/ total-essential-expenses-this-year 12.0))
+         (monthly-income (/ total-income-accumulated-this-year 12.0))
+         (monthly-savings (/ total-assets-accumulated-this-year 12.0)))
+    (list 'avg-income (* monthly-income 1.0)                        ;; Monthly income
+          'avg-expenses (* monthly-total-expenses 1.0)              ;; Average expenses
+          'efr (/ liquid-assets (* monthly-essential-expenses 1.0)) ;; Emergency-fund-ratio
+          'cr  (/ liquid-assets (* liabilities 1.0))                ;; Current ratio
+          'sr  (/ monthly-savings monthly-income)                   ;; Savings ratio
+          'dr (/ liabilities (* total-assets 1.0)))))               ;; Debt ratio
 
 
 (defun hledger-summarize-ratios (ratios)
@@ -527,7 +537,7 @@ three times."
       (make-string 80 ?=) "\n"
       "• Your current assets would be consumed in %.2f months with this lifestyle.\n"
       "• Your liquid assets are %.2f times your liabilities/debt.\n"
-      "• %.2f%% of assets are borrowed.\n"
+      "• %.2f%% of your total assets are borrowed.\n"
       "• For the past one year, you have been saving %.2f%% of your average income.\n"
       (make-string 80 ?=) "\n")
      efr
