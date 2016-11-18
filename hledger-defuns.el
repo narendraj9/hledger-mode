@@ -170,8 +170,10 @@ Note: This function uses `org-read-date'."
 
 (defun hledger-find-balance-delimits ()
   "Return the beginning and end point positions for shown --flat bals.
-Returns a cons pair of the point values."
+Returns a cons pair of the point values. Returns nil if there is
+not balance at point."
   (let* ((beg (save-excursion
+                (forward-line 0)
                 (while (and (looking-at hledger-whitespace-amount-regex)
                             (not (bobp)))
                   (forward-line -1))
@@ -179,6 +181,7 @@ Returns a cons pair of the point values."
                     (forward-line))
                 (point)))
          (end (save-excursion
+                (forward-line 0)
                 (while (and (looking-at hledger-whitespace-amount-regex)
                             (not (eobp)))
                   (forward-line))
@@ -186,66 +189,96 @@ Returns a cons pair of the point values."
                     (forward-line -1))
                 (end-of-line)
                 (point))))
-    (cons beg end)))
+    (when (< beg end)
+      (cons beg end))))
 
 
 (defun hledger-display-percentages ()
   "Display percentages for the balances around the point."
   (interactive)
-  (let* ((beg-end (hledger-find-balance-delimits))
-         (beg (car beg-end))
-         (end (cdr beg-end))
-         (amounts '()))
+  (let* ((amounts-with-delims-in-col (hledger-amounts-in-column))
+         ;; Delimits for flat account names, i.e lines starting with
+         ;; amount.
+         (flat-delims (hledger-find-balance-delimits))
+         ;; Prefer flat amounts
+         (beg-end (or flat-delims
+                      (cdr amounts-with-delims-in-col)))
+         (beg (and beg-end (car beg-end)))
+         (end (and beg-end (cdr beg-end)))
+         (amounts (if flat-delims '() (car amounts-with-delims-in-col))))
     (if hledger-display-percentages
-        (progn (remove-overlays beg (1+ end))
+        (progn (remove-overlays (save-excursion
+                                  (goto-char (get 'hledger-display-percentages 'beg))
+                                  (line-beginning-position))
+                                (save-excursion
+                                  (goto-char (get 'hledger-display-percentages 'end))
+                                  (line-end-position)))
                (setq hledger-display-percentages nil))
-      (save-excursion
-        (goto-char end)
-        (while (re-search-backward hledger-amount-regex beg t)
-          (push (string-to-number (replace-regexp-in-string
-                                   hledger-currency-string
-                                   ""
-                                   (match-string 0)))
-                amounts))
-        ;; Now that we have the amounts. Let's create overlays.
-        (goto-char beg)
-        (let ((amounts-sum (reduce '+ amounts))
-              (hledger-pchart-format
-               (concat "%-"
-                       (number-to-string hledger-percentage-chart-width)
-                       "s")))
-          (dolist (amount amounts)
-            ;; Overlay for display the percentage
-            (overlay-put (make-overlay (line-beginning-position)
-                                       (line-beginning-position))
-                         'after-string
-                         (concat
-                          ;; Percentages
-                          (propertize (format "  %5.2f%% "
-                                              (* (/ amount amounts-sum)
-                                                 100.0))
-                                      'font-lock-face
-                                      hledger-display-percentage-face)
-                          ;; Percentage chart
-                          (propertize
-                           (if hledger-show-percentage-chart
-                               (format hledger-pchart-format
-                                       (make-string
-                                        (round (* (/ amount amounts-sum)
-                                                  hledger-percentage-chart-width))
-                                        hledger-percentage-chart-char))
-                             "")
-                           'font-lock-face hledger-percentage-chart-face)))
+      (when (and beg end)
+        (save-excursion
+          ;; Collect amounts only when we are looking at flat account
+          ;; names with balances as in income statement.
+          (when flat-delims
+            (goto-char end)
+            (while (re-search-backward hledger-amount-regex beg t)
+              (push (string-to-number (replace-regexp-in-string
+                                       hledger-currency-string
+                                       ""
+                                       (match-string 0)))
+                    amounts)))
+          ;; Now that we have the amounts. Let's create overlays.
+          (goto-char beg)
+          (let* ((pos-amounts (seq-filter (lambda (n)
+                                            (< 0 n))
+                                          amounts))
+                 (neg-amounts (seq-filter (lambda (n)
+                                            (not (< 0 n)))
+                                          amounts))
+                 (pos-amounts-sum (reduce '+ pos-amounts :initial-value 0.0))
+                 (neg-amounts-sum (reduce '+ neg-amounts :initial-value 0.0))
+                 (hledger-pchart-format
+                  (concat "%-"
+                          (number-to-string hledger-percentage-chart-width)
+                          "s")))
+            (dolist (amount amounts)
+              ;; Overlay for display the percentage
+              (let ((amounts-sum (if (< 0 amount)
+                                     pos-amounts-sum
+                                   neg-amounts-sum)))
+                (overlay-put (make-overlay (line-beginning-position)
+                                           (line-beginning-position))
+                             'after-string
+                             (concat
+                              ;; Percentages
+                              (propertize (format "  %5.2f%% "
+                                                  (* (/ amount amounts-sum)
+                                                     100.0))
+                                          'font-lock-face
+                                          hledger-display-percentage-face)
+                              ;; Percentage chart
+                              (propertize
+                               (if hledger-show-percentage-chart
+                                   (format hledger-pchart-format
+                                           (make-string
+                                            (round (* (/ amount amounts-sum)
+                                                      hledger-percentage-chart-width))
+                                            hledger-percentage-chart-char))
+                                 "")
+                               'font-lock-face hledger-percentage-chart-face))))
 
-            (forward-line))))
-      (setq hledger-display-percentages t))))
+              (forward-line))))
+        (setq hledger-display-percentages t)
+        (put 'hledger-display-percentages 'beg beg)
+        (put 'hledger-display-percentages 'end end)))))
 
 
 (defun hledger-sort-flat-balances (prefix)
-  "Sorts the flat balances according the amount value.
+  "Sort the flat balances according the amount value.
 This assumes that the amount value appears in the second column
-after the currency sign. So, it won't work for different
-commodities with differently positioned commodity signs."
+after the currency sign.  So, it won't work for different
+commodities with differently positioned commodity signs.
+Argument PREFIX is the universal argument to decide whether to
+reverse the direction of sorting."
   (interactive "P")
   (let* ((inhibit-read-only t)
          (beg-end (hledger-find-balance-delimits))
@@ -254,6 +287,106 @@ commodities with differently positioned commodity signs."
     (sort-numeric-fields 2 beg end)
     (if (not prefix)
         (reverse-region beg end))))
+
+
+(defun hledger-bounds-of-thing-at-point (thing-regexp &optional sep-regexp)
+  "Return the (beg . end) point positions for amount at point.
+To make this work, one must be either inside or after thing at point in buffer.
+Argument THING-REGEXP is the regular expression that matches the thing.
+Optional argument SEP-REGEXP is the regular expression that separates things."
+  (let* ((here (point))
+         ;; Search back for separator
+         (beg (progn
+                (when (search-backward-regexp (or sep-regexp
+                                                  "\\s-+")
+                                              (point-min)
+                                              t)
+                  (search-forward-regexp (or sep-regexp
+                                             "\\s-+")
+                                         here
+                                         t))))
+         ;; Search forward for separator
+         (end-bound (save-excursion
+                      (search-forward-regexp (or sep-regexp
+                                                 "\\s-+")
+                                             (point-max)
+                                             t)))
+         ;; Search for the thing starting the first separator ^
+         (end (search-forward-regexp thing-regexp
+                                     (or end-bound
+                                         (point-max))
+                                     t)))
+    ;; Restore point
+    (goto-char here)
+    ;; If any one of the ends is nil, return nil.
+    (and (and beg end)
+         (cons beg end))))
+
+
+(defun hledger-bounds-of-account-at-point ()
+    "Return the bounds of an account name at point."
+  (hledger-bounds-of-thing-at-point hledger-account-regex))
+
+
+(defun hledger-bounds-of-date-at-point ()
+    "Return the bounds of date at point."
+  (hledger-bounds-of-thing-at-point hledger-date-regex))
+
+
+(defun hledger-bounds-of-amount-at-point ()
+  "Return the bounds of a floating point number at point."
+  (hledger-bounds-of-thing-at-point hledger-amount-value-regex))
+
+
+(defun hledger-init-thing-at-point ()
+    "Setup properties for thingatpt.el."
+  (put 'hledger-account
+       'bounds-of-thing-at-point
+       'hledger-bounds-of-account-at-point)
+  (put 'hledger-amount
+       'bounds-of-thing-at-point
+       'hledger-bounds-of-amount-at-point)
+  (put 'hledger-date
+       'bounds-of-thing-at-point
+       'hledger-bounds-of-date-at-point))
+
+
+(defun hledger-amounts-in-column ()
+  "Return a sequence of consecutive amounts in current column.
+Returns a cons cell with amounts and the delimiting point
+values."
+  (let ((col (current-column))
+        (amounts '())
+        (end nil)
+        (beg nil))
+    (when (thing-at-point 'hledger-amount)
+      (save-excursion
+        ;; Let's go all the way down first
+        (while (and (thing-at-point 'hledger-amount)
+                    (not (eobp)))
+          (forward-line)
+          (move-to-column col))
+        ;; Move to the last amount
+        (forward-line -1)
+        (move-to-column col)
+        ;; Store the first end point of the amount
+        (setq end (cdr (bounds-of-thing-at-point 'hledger-amount)))
+        ;; Start collection amounts now
+        (while (and (thing-at-point 'hledger-amount)
+                    (not (bobp)))
+          (push (string-to-number (thing-at-point 'hledger-amount))
+                amounts)
+          (forward-line -1)
+          (move-to-column col))
+        ;; Move to the first amount
+        (forward-line)
+        (move-to-column col)
+        ;; Store the last end point of the amount
+        (setq beg (car (bounds-of-thing-at-point 'hledger-amount)))
+
+        ;; Returns (amounts . (beg . end))
+        (cons amounts
+              (cons beg end))))))
 
 
 (provide 'hledger-defuns)

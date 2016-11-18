@@ -20,7 +20,7 @@
 
 ;;; Commentary:
 
-;; 
+;;
 
 ;;; Code:
 
@@ -44,6 +44,14 @@
   :group 'hledger
   :type 'integer)
 
+;; Things in hledger
+(defvar hledger-amount 0
+  "Variable to be used for looking at amount at point.")
+(defvar hledger-date "18-06-1993"
+  "Variable to be used for looking at date at point.")
+(defvar hledger-account "assets"
+  "Variable to be used for looking at account name at point.")
+
 ;;; Regexes
 (defvar hledger-empty-regex "^\\s-*$"
   "Regular expression for an empty line.")
@@ -61,6 +69,8 @@
   "Regular expression for a comment in journal file.")
 (defvar hledger-empty-comment-regex "^\\s-*;\\s-*$"
   "Regular expression to match a comment with no text.")
+(defvar hledger-amount-value-regex "[-]?[0-9]+\\(\\.[0-9]+\\)?"
+  "Regular expression to match a floating point number.")
 (defvar hledger-amount-regex (format "\\<%s\\s-*[-]?[0-9]+\\(\\.[0-9]+\\)?\\>"
                                      hledger-currency-string)
   "Regular expression to match an inserted amount in rupees.")
@@ -149,7 +159,7 @@
 (defun hledger-prev-has-accp ()
   "Return true if the previous line has an account name."
   (hledger-prev-line-matchesp hledger-whitespace-account-regex))
-  
+
 (defun hledger-indent-empty-line ()
   "Called when the line to be indented is an empty one."
   (cond

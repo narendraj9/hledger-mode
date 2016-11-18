@@ -123,7 +123,8 @@ COMMAND, ARG and IGNORED the regular meanings."
 (define-derived-mode hledger-mode fundamental-mode "HLedger" ()
   "Major mode for editing journal files."
   :syntax-table hledger-mode-syntax-table
-  (hledger-mode-init))
+  (hledger-mode-init)
+  (hledger-init-thing-at-point))
 
 ;;;###autoload
 (define-derived-mode hledger-view-mode special-mode "HLedger View" ()
@@ -134,7 +135,8 @@ highlighting in both kinds of buffers."
   :syntax-table hledger-mode-syntax-table
   (setq font-lock-defaults hledger-font-lock-defaults)
   ;; Avoid wrapping lines in reports
-  (setq truncate-lines t))
+  (setq truncate-lines t)
+  (hledger-init-thing-at-point))
 
 (provide 'hledger-mode)
 
