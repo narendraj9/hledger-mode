@@ -196,6 +196,7 @@ not balance at point."
 (defun hledger-display-percentages ()
   "Display percentages for the balances around the point."
   (interactive)
+  (make-local-variable 'hledger-display-percentages)
   (let* ((amounts-with-delims-in-col (hledger-amounts-in-column))
          ;; Delimits for flat account names, i.e lines starting with
          ;; amount.
