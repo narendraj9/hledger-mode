@@ -535,7 +535,7 @@ three times."
     (format
      (concat
       (make-string 80 ?=) "\n"
-      "• Your current assets would be consumed in %.2f months with this lifestyle.\n"
+      "• Your liquid assets would be consumed in %.2f months with this lifestyle.\n"
       "• Your liquid assets are %.2f times your liabilities/debt.\n"
       "• %.2f%% of your total assets are borrowed.\n"
       "• For the past one year, you have been saving %.2f%% of your average income.\n"

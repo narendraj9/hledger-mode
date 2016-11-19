@@ -168,9 +168,22 @@ Note: This function uses `org-read-date'."
   "Variable accompanying `hledger-display-percentags' to maintain state.")
 
 
+(defun hledger-remove-overlays ()
+  "Remove overlays from beg to end in `hledger-display-percentages'."
+  (remove-hook 'post-command-hook #'hledger-remove-overlays)
+  (remove-overlays (get 'hledger-display-percentages 'beg)
+                   (1+ (get 'hledger-display-percentages 'end))))
+
+
+(defun hledger-remove-overlays-hook ()
+  "Hook to be called for removing overlays created for % display."
+  (remove-hook 'post-command-hook #'hledger-remove-overlays-hook)
+  (add-hook 'post-command-hook #'hledger-remove-overlays))
+
+
 (defun hledger-find-balance-delimits ()
   "Return the beginning and end point positions for shown --flat bals.
-Returns a cons pair of the point values. Returns nil if there is
+Returns a cons pair of the point values.  Returns nil if there is
 not balance at point."
   (let* ((beg (save-excursion
                 (forward-line 0)
@@ -206,71 +219,70 @@ not balance at point."
                       (cdr amounts-with-delims-in-col)))
          (beg (and beg-end (car beg-end)))
          (end (and beg-end (cdr beg-end)))
-         (amounts (if flat-delims '() (car amounts-with-delims-in-col))))
-    (if hledger-display-percentages
-        (progn (remove-overlays (save-excursion
-                                  (goto-char (get 'hledger-display-percentages 'beg))
-                                  (line-beginning-position))
-                                (save-excursion
-                                  (goto-char (get 'hledger-display-percentages 'end))
-                                  (line-end-position)))
-               (setq hledger-display-percentages nil))
-      (when (and beg end)
-        (save-excursion
-          ;; Collect amounts only when we are looking at flat account
-          ;; names with balances as in income statement.
-          (when flat-delims
-            (goto-char end)
-            (while (re-search-backward hledger-amount-regex beg t)
-              (push (string-to-number (replace-regexp-in-string
-                                       hledger-currency-string
-                                       ""
-                                       (match-string 0)))
-                    amounts)))
-          ;; Now that we have the amounts. Let's create overlays.
-          (goto-char beg)
-          (let* ((pos-amounts (seq-filter (lambda (n)
-                                            (< 0 n))
-                                          amounts))
-                 (neg-amounts (seq-filter (lambda (n)
-                                            (not (< 0 n)))
-                                          amounts))
-                 (pos-amounts-sum (reduce '+ pos-amounts :initial-value 0.0))
-                 (neg-amounts-sum (reduce '+ neg-amounts :initial-value 0.0))
-                 (hledger-pchart-format
-                  (concat "%-"
-                          (number-to-string hledger-percentage-chart-width)
-                          "s")))
-            (dolist (amount amounts)
-              ;; Overlay for display the percentage
-              (let ((amounts-sum (if (< 0 amount)
-                                     pos-amounts-sum
-                                   neg-amounts-sum)))
-                (overlay-put (make-overlay (line-beginning-position)
-                                           (line-beginning-position))
-                             'after-string
-                             (concat
-                              ;; Percentages
-                              (propertize (format "  %5.2f%% "
-                                                  (* (/ amount amounts-sum)
-                                                     100.0))
-                                          'font-lock-face
-                                          hledger-display-percentage-face)
-                              ;; Percentage chart
-                              (propertize
-                               (if hledger-show-percentage-chart
-                                   (format hledger-pchart-format
-                                           (make-string
-                                            (round (* (/ amount amounts-sum)
-                                                      hledger-percentage-chart-width))
-                                            hledger-percentage-chart-char))
-                                 "")
-                               'font-lock-face hledger-percentage-chart-face))))
+         (amounts (if flat-delims '() (car amounts-with-delims-in-col)))
+         ;; Display overlay starting this column if flat-delims is nil
+         (overlay-column (save-excursion (goto-char end)
+                                         (current-column))))
+    (when (and beg end)
+      (save-excursion
+        ;; Collect amounts only when we are looking at flat account
+        ;; names with balances as in income statement.
+        (when flat-delims
+          (goto-char end)
+          (while (re-search-backward hledger-amount-regex beg t)
+            (push (string-to-number (replace-regexp-in-string
+                                     hledger-currency-string
+                                     ""
+                                     (match-string 0)))
+                  amounts)))
+        ;; Now that we have the amounts. Let's create overlays.
+        (goto-char beg)
+        (let* ((pos-amounts (seq-filter (lambda (n)
+                                          (< 0 n))
+                                        amounts))
+               (neg-amounts (seq-filter (lambda (n)
+                                          (not (< 0 n)))
+                                        amounts))
+               (pos-amounts-sum (reduce '+ pos-amounts :initial-value 0.0))
+               (neg-amounts-sum (reduce '+ neg-amounts :initial-value 0.0))
+               (hledger-pchart-format
+                (concat "%-"
+                        (number-to-string hledger-percentage-chart-width)
+                        "s")))
+          (dolist (amount amounts)
+            ;; Overlay for display the percentage
+            (let ((amounts-sum (if (< 0 amount)
+                                   pos-amounts-sum
+                                 neg-amounts-sum)))
+              ;; Add overlay column if it's just a column of amounts.
+              (overlay-put (make-overlay (+ (line-beginning-position)
+                                            (if flat-delims 0 overlay-column))
+                                         (+ (line-beginning-position)
+                                            (if flat-delims 0 overlay-column)))
+                           'after-string
+                           (concat
+                            ;; Percentages
+                            (propertize (format "  %5.2f%% "
+                                                (* (/ amount amounts-sum)
+                                                   100.0))
+                                        'font-lock-face
+                                        hledger-display-percentage-face)
+                            ;; Percentage chart
+                            (propertize
+                             (if hledger-show-percentage-chart
+                                 (format hledger-pchart-format
+                                         (make-string
+                                          (round (* (/ amount amounts-sum)
+                                                    hledger-percentage-chart-width))
+                                          hledger-percentage-chart-char))
+                               "")
+                             'font-lock-face hledger-percentage-chart-face))))
 
-              (forward-line))))
-        (setq hledger-display-percentages t)
-        (put 'hledger-display-percentages 'beg beg)
-        (put 'hledger-display-percentages 'end end)))))
+            (forward-line))))
+      (setq hledger-display-percentages t)
+      (put 'hledger-display-percentages 'beg beg)
+      (put 'hledger-display-percentages 'end end)
+      (add-hook 'post-command-hook 'hledger-remove-overlays-hook))))
 
 
 (defun hledger-sort-flat-balances (prefix)

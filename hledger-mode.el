@@ -9,10 +9,10 @@
 
 ;;; Commentary:
 ;;
-;; A major mode for writing hledger journal files. It generates some
+;; A major mode for writing hledger journal files.  It generates some
 ;; useful reports along with some financial ratios that can help you
-;; keep a check on your financial health. This is an attempt to
-;; organize personal finances for Emacs users. If you don't like this,
+;; keep a check on your financial health.  This is an attempt to
+;; organize personal finances for Emacs users.  If you don't like this,
 ;; try `ledger-mode'.
 ;;
 ;; Note: You must have hledger installed to be able to create the
@@ -80,10 +80,14 @@ COMMAND, ARG and IGNORED the regular meanings."
     (define-key map (kbd "<") 'hledger-prev-report)
     (define-key map (kbd ">") 'hledger-next-report)
     (define-key map (kbd ".") 'hledger-present-report)
-    (define-key map (kbd "o") (hledger-as-command hledger-overall-report* "overall"))
-    (define-key map (kbd "i") (hledger-as-command hledger-incomestatement* "incomestatement"))
-    (define-key map (kbd "d") (hledger-as-command hledger-daily-report* "daily"))
-    (define-key map (kbd "b") (hledger-as-command hledger-balancesheet* "balancesheet"))
+    (define-key map (kbd "o") (hledger-as-command hledger-overall-report*
+                                                  "overall"))
+    (define-key map (kbd "i") (hledger-as-command hledger-incomestatement*
+                                                  "incomestatement"))
+    (define-key map (kbd "d") (hledger-as-command hledger-daily-report*
+                                                  "daily"))
+    (define-key map (kbd "b") (hledger-as-command hledger-balancesheet*
+                                                  "balancesheet"))
     (define-key map (kbd "<tab>") 'hledger-expand-account-for-month)
     (define-key map (kbd "s") 'hledger-summarize)
     (define-key map (kbd "n") 'hledger-next-line)
@@ -117,6 +121,7 @@ COMMAND, ARG and IGNORED the regular meanings."
   (setq-local comment-end "")
   (setq require-final-newline t)
   (electric-indent-local-mode -1)
+  ;; How can make this execute lazily?
   (setq hledger-accounts-cache (hledger-get-accounts)))
 
 ;;;###autoload
