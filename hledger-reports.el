@@ -156,6 +156,21 @@ time."
   "Return the Nth day's time for the previous month."
   (hledger-nth-of-mth-month n -1))
 
+(defun hledger-beg-reporting-time ()
+  "Return the beginning day for monthly reports."
+  (let ((today (nth 3 (decode-time (current-time)))))
+    (if (< hledger-reporting-day today)
+        (hledger-nth-of-this-month hledger-reporting-day)
+      (hledger-nth-of-prev-month hledger-reporting-day))))
+
+(defun hledger-end-reporting-time ()
+  "Return the end day for monthly reports."
+  (let ((today (nth 3 (decode-time (current-time)))))
+    (time-add (if (< hledger-reporting-day today)
+                  (hledger-nth-of-mth-month hledger-reporting-day 1)
+                (hledger-nth-of-this-month hledger-reporting-day))
+              (days-to-time 1))))
+
 (defun hledger-shell-command-to-string (command-string)
   "Return the result of running COMMAND-STRING has an hledger command."
 (shell-command-to-string (concat "hledger -f "
@@ -316,8 +331,8 @@ and forth in time in the personal finance buffer.  I feel that the
 complete incomestatement isn't much useful for me.
 Optional argument HIDE-HEADER-P if non-nil, header line showing duration isn't shown."
   (interactive)
-  (let* ((beg-time (hledger-nth-of-prev-month hledger-reporting-day))
-         (end-time (hledger-nth-of-this-month hledger-reporting-day))
+  (let* ((beg-time (hledger-beg-reporting-time))
+         (end-time (hledger-end-reporting-time))
          (beg-time-string (hledger-format-time beg-time))
          (end-time-string (hledger-format-time end-time)))
     (with-current-buffer (hledger-get-perfin-buffer)
@@ -362,9 +377,7 @@ isn't switched to."
   (let* ((beg-time-string (hledger-format-time (hledger-nth-of-mth-month
                                                 hledger-reporting-day
                                                 (- hledger-running-report-months))))
-         (end-time-string (hledger-format-time (hledger-nth-of-mth-month
-                                                hledger-reporting-day
-                                                0))))
+         (end-time-string (hledger-format-time (hledger-end-reporting-time))))
     (hledger-jdo (format "balance %s %s --depth 2 -A -p %s"
                          hledger-top-expense-account
                          hledger-top-income-account
@@ -641,8 +654,8 @@ This is the reason dynamic scoping is cool sometimes."
     (when (search-forward-regexp hledger-account-regex (line-end-position) t)
       (let* ((account (substring-no-properties (match-string 0)))
              (drop-count (length (split-string account ":")))
-             (beg-time (hledger-nth-of-prev-month hledger-reporting-day))
-             (end-time (hledger-nth-of-this-month hledger-reporting-day))
+             (beg-time (hledger-beg-reporting-time))
+             (end-time (hledger-end-reporting-time))
              (beg-time-string (hledger-format-time beg-time))
              (end-time-string (hledger-format-time end-time))
              (balance-report (hledger-shell-command-to-string

@@ -172,7 +172,9 @@ Note: This function uses `org-read-date'."
   "Remove overlays from beg to end in `hledger-display-percentages'."
   (remove-hook 'post-command-hook #'hledger-remove-overlays)
   (remove-overlays (get 'hledger-display-percentages 'beg)
-                   (1+ (get 'hledger-display-percentages 'end))))
+                   ;; Take into account the margin and just one more
+                   ;; char
+                   (+ 2 (get 'hledger-display-percentages 'end))))
 
 
 (defun hledger-remove-overlays-hook ()
@@ -221,8 +223,10 @@ not balance at point."
          (end (and beg-end (cdr beg-end)))
          (amounts (if flat-delims '() (car amounts-with-delims-in-col)))
          ;; Display overlay starting this column if flat-delims is nil
-         (overlay-column (save-excursion (goto-char end)
-                                         (current-column))))
+         (overlay-column (save-excursion (and end
+                                              (goto-char end)
+                                              ;; 1+ is the margin value
+                                              (1+ (current-column))))))
     (when (and beg end)
       (save-excursion
         ;; Collect amounts only when we are looking at flat account
