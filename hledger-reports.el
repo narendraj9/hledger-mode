@@ -158,14 +158,14 @@ time."
 
 (defun hledger-beg-reporting-time ()
   "Return the beginning day for monthly reports."
-  (let ((today (nth 3 (decode-time (current-time)))))
+  (let ((today (string-to-number (format-time-string "%d"))))
     (if (< hledger-reporting-day today)
         (hledger-nth-of-this-month hledger-reporting-day)
       (hledger-nth-of-prev-month hledger-reporting-day))))
 
 (defun hledger-end-reporting-time ()
   "Return the end day for monthly reports."
-  (let ((today (nth 3 (decode-time (current-time)))))
+  (let ((today (string-to-number (format-time-string "%d"))))
     (time-add (if (< hledger-reporting-day today)
                   (hledger-nth-of-mth-month hledger-reporting-day 1)
                 (hledger-nth-of-this-month hledger-reporting-day))
