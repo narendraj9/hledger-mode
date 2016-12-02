@@ -71,6 +71,7 @@ COMMAND, ARG and IGNORED the regular meanings."
 (defvar hledger-view-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-q") 'hledger-kill-reporting-window)
+    (define-key map (kbd "e") 'hledger-jentry)
     (define-key map (kbd "g") 'hledger-refresh-buffer)
     (define-key map (kbd "q") 'bury-buffer)
     (define-key map (kbd "h") 'hledger-show-view-mode-help)
