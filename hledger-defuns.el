@@ -406,5 +406,20 @@ values."
               (cons beg end))))))
 
 
+(defun hledger-op-on-amount (op)
+  "Apply operation OP on the previous amount in sight."
+  (save-excursion
+    (search-backward-regexp hledger-amount-value-regex)
+    (let* ((amount (thing-at-point 'number))
+           (new-amount (funcall op amount)))
+      (replace-match (number-to-string new-amount)))))
+
+
+(defun hledger-increment-amount ()
+  "Increment amount by 1."
+  (interactive)
+  (hledger-op-on-amount '+))
+
+
 (provide 'hledger-defuns)
 ;;; hledger-defuns.el ends here

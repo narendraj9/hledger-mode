@@ -168,10 +168,9 @@ time."
 (defun hledger-end-reporting-time ()
   "Return the end day for monthly reports."
   (let ((today (string-to-number (format-time-string "%d"))))
-    (time-add (if (< hledger-reporting-day today)
-                  (hledger-nth-of-mth-month hledger-reporting-day 1)
-                (hledger-nth-of-this-month hledger-reporting-day))
-              (days-to-time 1))))
+    (if (< hledger-reporting-day today)
+        (hledger-nth-of-mth-month hledger-reporting-day 1)
+      (hledger-nth-of-this-month hledger-reporting-day))))
 
 (defun hledger-shell-command-to-string (command-string)
   "Return the result of running COMMAND-STRING has an hledger command."
