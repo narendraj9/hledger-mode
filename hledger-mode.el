@@ -89,7 +89,7 @@ COMMAND, ARG and IGNORED the regular meanings."
                                                   "daily"))
     (define-key map (kbd "b") (hledger-as-command hledger-balancesheet*
                                                   "balancesheet"))
-    (define-key map (kbd "<tab>") 'hledger-expand-account-for-month)
+    (define-key map (kbd "<tab>") 'hledger-expand-account)
     (define-key map (kbd "s") 'hledger-summarize)
     (define-key map (kbd "n") 'hledger-next-line)
     (define-key map (kbd "p") 'hledger-prev-line)

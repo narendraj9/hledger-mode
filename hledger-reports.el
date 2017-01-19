@@ -318,7 +318,7 @@ See `hledger-daily-report-accounts'."
                       (make-string 20 ?=)
                       "\n"))
       (let ((beg-time-string (hledger-format-time ()))))
-      (hledger-jdo (format "balance %s --begin %s --end %s"
+      (hledger-jdo (format "balance %s --begin %s --end %s --depth 2 --flat"
                            hledger-daily-report-accounts
                            (hledger-format-time reporting-since)
                            (hledger-end-date (current-time)))
@@ -641,11 +641,12 @@ This is the reason dynamic scoping is cool sometimes."
                         header-filler)
                 'font-lock-face hledger-report-header-face)))
 
-(defun hledger-expand-account-for-month ()
+(defun hledger-expand-account ()
   "Expands account for the month according to `hledger-last-run-time'."
   (interactive)
   (if (equal hledger-last-run-command "daily")
-      (message "No expansion for daily report.")
+      (hledger-run-fn-for-day hledger-last-run-time
+                              'hledger-expand-account-for-this-month)
     (hledger-run-fn-for-month hledger-last-run-time
                               'hledger-expand-account-for-this-month)))
 
