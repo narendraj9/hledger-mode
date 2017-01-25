@@ -61,7 +61,7 @@
   "Regular expression for dates for font lock.")
 (defvar hledger-date-and-desc-regex (format "\\<%s\\s-*\\*?\\s-*[^[:space:]]+\\>" hledger-date-regex)
   "Regular expression for matching a starting entry with some description.")
-(defvar hledger-account-regex "\\(\\([Rr]evenues\\|[aA]ssets\\|[lL]iabilities\\|[Ee]quity\\|[Ee]xpenses\\|[iI]ncome\\|[Zz]adjustments\\)\\(:[A-Za-z--]+\\)*\\)"
+(defvar hledger-account-regex "\\(\\([Rr]evenues\\|[aA]ssets\\|[lL]iabilities\\|[Ee]quity\\|[Ee]xpenses\\|[iI]ncome\\|[Zz]adjustments\\)\\(:[A-Za-z--]+\\)+\\)"
   "Regular expression for a potential journal account.")
 (defvar hledger-whitespace-account-regex (format "\\s-*%s" hledger-account-regex)
   "Regular expression for an account with leading whitespace.")
