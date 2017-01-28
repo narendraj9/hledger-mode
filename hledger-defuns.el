@@ -57,6 +57,14 @@
   20
   "Width of the percentage chart.")
 
+;; Things in hledger
+(defvar hledger-amount 0
+  "Variable to be used for looking at amount at point.")
+(defvar hledger-date "18-06-1993"
+  "Variable to be used for looking at date at point.")
+(defvar hledger-account "assets"
+  "Variable to be used for looking at account name at point.")
+
 (defun hledger-ret-command ()
   "Commands run on <return> in ‘hledger-mode’."
   (interactive)
