@@ -134,20 +134,6 @@
   (hledger-move-line -1))
 
 
-(defun hledger-summarize ()
-  "Show summary for the financial ratios."
-  (interactive)
-  (if hledger-ratios-summary
-      (momentary-string-display hledger-ratios-summary
-                                (if (equal hledger-last-run-command
-                                           "overall")
-                                    hledger-ratios-summary-point
-                                  (point-max))
-                                ?s
-                                "Press 's' to hide")
-    (message "Overall report hasn't been compiled yet.")))
-
-
 (defun hledger-reschedule ()
   "Reschedule the transaction at point.
 Note: This function uses `org-read-date'."

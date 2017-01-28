@@ -90,7 +90,6 @@ COMMAND, ARG and IGNORED the regular meanings."
     (define-key map (kbd "b") (hledger-as-command hledger-balancesheet*
                                                   "balancesheet"))
     (define-key map (kbd "<tab>") 'hledger-expand-account)
-    (define-key map (kbd "s") 'hledger-summarize)
     (define-key map (kbd "n") 'hledger-next-line)
     (define-key map (kbd "p") 'hledger-prev-line)
     (define-key map (kbd "%") 'hledger-display-percentages)

@@ -109,6 +109,12 @@ I taint entries with a star, to declare that they haven't been effective yet."
   :group 'hledger
   :type 'face)
 
+(defcustom hledger-overall-report-summary-text-face
+  '(:foreground "Cornsilk" :height 1.0)
+  "Face for the summary text in overall report."
+  :group 'hledger
+  :type 'face)
+
 (defcustom hledger-account-balance-expand-face
   '(:foreground "Cornsilk" :background "DarkSlateGray")
   "Face for the expanded account names with their balances in current period."
@@ -553,11 +559,11 @@ three times."
     (format
      (concat
       (make-string 80 ?=) "\n"
-      "• Your liquid assets would be consumed in %.2f months with this lifestyle.\n"
-      "• Your liquid assets are %.2f times your liabilities/debt.\n"
-      "• %.2f%% of your total assets are borrowed.\n"
-      "• For the past one year, you have been saving %.2f%% of your average income.\n"
-      "• You assets would roughly increase by %s %s in the next 10 years.\n"
+      " • Your liquid assets would be consumed in %.2f months with this lifestyle.\n"
+      " • Your liquid assets are %.2f times your liabilities/debt.\n"
+      " • %.2f%% of your total assets are borrowed.\n"
+      " • For the past one year, you have been saving %.2f%% of your average income.\n"
+      " • You assets would roughly increase by %s %s in the next 10 years.\n"
       (make-string 80 ?=) "\n")
      tfr
      cr
@@ -593,13 +599,14 @@ three times."
 
 ╚══════════════════════════════════════╩══════════════════════════════════════════╝
 
+%s
 "
                         efr sr
                         cr  hledger-currency-string avg-income
-                        dr  hledger-currency-string avg-expenses))
-        ;; Let's update the ratios summary
-        (setq hledger-ratios-summary summary)
-        (setq hledger-ratios-summary-point (point)))
+                        dr  hledger-currency-string avg-expenses
+                        (propertize summary
+                                    'font-lock-face
+                                    hledger-overall-report-summary-text-face))))
       (goto-char (point-min))
       (message "Done!"))))
 
