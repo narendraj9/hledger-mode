@@ -212,6 +212,23 @@ interactively editing an entry."
        ((hledger-cur-has-accp) (indent-line-to tab-width)))
       (forward-line 1))))
 
+(defun hledger-forward-entry (&optional n)
+  "Move past N hledger entries.
+With a prefix argument, repeat that many times."
+  (interactive "p")
+  ;; To make sure we are not on the date of the first entry.
+  (end-of-line)
+  (search-forward-regexp hledger-date-regex nil t (or n 1))
+  (forward-line 0))
+
+(defun hledger-backward-entry (&optional n)
+  "Move backward by N hledger entries.
+With a prefix argument, repeat that many times."
+  (interactive "p")
+  ;; To make sure we skip the current entry.
+  (forward-line 0)
+  (search-backward-regexp hledger-date-regex nil t (or n 1)))
+
 (defun hledger-toggle-star ()
   "Toggle the star status of a journal entry."
   (interactive)

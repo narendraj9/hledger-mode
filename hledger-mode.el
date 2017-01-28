@@ -64,6 +64,8 @@ COMMAND, ARG and IGNORED the regular meanings."
     (define-key map (kbd "C-c C-i") 'hledger-append-clipboard-to-journal)
     (define-key map (kbd "C-c C-t") 'hledger-toggle-star)
     (define-key map (kbd "C-c C-r") 'hledger-reschedule)
+    (define-key map (kbd "C-c C-p") 'hledger-backward-entry)
+    (define-key map (kbd "C-c C-n") 'hledger-forward-entry)
     (define-key map (kbd "RET")  'hledger-ret-command)
     (define-key map (kbd "<backtab>") 'hledger-backtab-command)
     map))
