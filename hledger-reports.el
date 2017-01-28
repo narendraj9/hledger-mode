@@ -540,7 +540,9 @@ three times."
          (monthly-savings (/ total-assets-accumulated-this-year 12.0)))
     (list 'avg-income (* monthly-income 1.0)                        ;; Monthly income
           'avg-expenses (* monthly-total-expenses 1.0)              ;; Average expenses
-          'avg-monthly-savings monthly-savings
+          'avg-monthly-savings monthly-savings                      ;; Average monthly savings
+          'total-assets total-assets                                ;; Total assets as of now
+          'current-net-worth (- total-assets liabilities)           ;; Current net worth
           'efr (/ liquid-assets (* monthly-essential-expenses 1.0)) ;; Emergency-fund-ratio
           'tfr (/ liquid-assets (* monthly-total-expenses 1.0))     ;; Total-fund ratio | Similar to efr.
           'cr  (/ liquid-assets (* liabilities 1.0))                ;; Current ratio
@@ -554,23 +556,31 @@ three times."
          (cr (plist-get ratios 'cr))
          (dr (plist-get ratios 'dr))
          (sr (plist-get ratios 'sr))
+         (cnw (plist-get ratios 'current-net-worth))
          (extrapolated-decennial-savings
-          (* 12 10 (plist-get ratios 'avg-monthly-savings))))
+          (* 12 10 (plist-get ratios 'avg-monthly-savings)))
+         (extrapolated-net-worth (+ cnw
+                                    extrapolated-decennial-savings)))
     (format
      (concat
-      (make-string 80 ?=) "\n"
-      " • Your liquid assets would last %s with this lifestyle.\n"
-      " • Your liquid assets are %.2f times your liabilities/debt.\n"
-      " • %.2f%% of your total assets are borrowed.\n"
-      " • For the past one year, you have been saving %.2f%% of your average income.\n"
-      " • You assets would roughly increase by %s %s in the next 10 years.\n"
+      (make-string 80 ?=)
+      "
+ • Your liquid assets would last %s with this lifestyle.
+ • Your liquid assets are %.2f times your liabilities/debt.
+ • %.2f%% of your total assets are borrowed.
+ • For the past one year, you have been saving %.2f%% of your average income.
+ • Your assets would roughly increase by %s %s in the next 10 years
+   making your net worth %s %s.
+"
       (make-string 80 ?=) "\n")
      (hledger-humanize-float-months tfr)
      cr
      (* dr 100.0)
      (* sr 100.0)
      hledger-currency-string
-     (hledger-group-digits (truncate extrapolated-decennial-savings)))))
+     (hledger-group-digits (truncate extrapolated-decennial-savings))
+     hledger-currency-string
+     (hledger-group-digits (truncate extrapolated-net-worth)))))
 
 (defun hledger-overall-report ()
   "A combination of all the relevant reports."
