@@ -44,8 +44,13 @@
   :group 'hledger
   :type 'integer)
 
+(defcustom hledger-enable-current-overlay nil
+  "Boolean to decide whether to enable current entry overlay."
+  :group 'hledger
+  :type 'boolean)
+
 (defcustom hledger-current-entry-overlay-face
-  '()                    ;'(:background "dark slate grey" :height 1.1)
+  '(:background "dark slate grey" :height 1.1)
   "Face for the current journal entry's overlay."
   :group 'hledger
   :type 'face)
@@ -262,8 +267,7 @@ Returns nil if we are at the beginning of the journal."
       (while (or (looking-at hledger-empty-regex)
                  (looking-at hledger-date-regex))
         (forward-line -1))
-      (forward-line 1)
-      (cons new-x (point)))))
+      (cons new-x (line-end-position)))))
 
 (defun hledger-update-current-entry-overlay ()
   "Update the overlay for the current journal entry."
@@ -274,12 +278,23 @@ Returns nil if we are at the beginning of the journal."
              hledger-current-entry-end
              (< hledger-current-entry-beg (point) hledger-current-entry-end))
         nil
-      (let ((bounds-of-entry (hledger-bounds-of-current-entry)))
+      (let* ((bounds-of-entry (hledger-bounds-of-current-entry))
+             (gap-to-fill (save-excursion
+                            (goto-char (cdr bounds-of-entry))
+                            (- (window-text-width) (current-column)))))
+
         (setq hledger-current-entry-beg (car bounds-of-entry))
         (setq hledger-current-entry-end (cdr bounds-of-entry))
         (move-overlay hledger-current-entry-overlay
                       hledger-current-entry-beg
-                      hledger-current-entry-end)))))
+                      hledger-current-entry-end)
+        (overlay-put hledger-current-entry-overlay
+                     'after-string
+                     (propertize " "
+                                 'display
+                                 `((space :align-to ,(window-text-width)))
+                                 'face hledger-current-entry-overlay-face
+                                 'cursor t))))))
 
 (defun hledger-toggle-star ()
   "Toggle the star status of a journal entry."

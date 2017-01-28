@@ -123,12 +123,13 @@ COMMAND, ARG and IGNORED the regular meanings."
   (setq-local comment-end "")
   (setq require-final-newline t)
   (electric-indent-local-mode -1)
-  ;; Make an overlay for current entry
-  (setq hledger-current-entry-overlay
-        (make-overlay (point-max) (point-max) (current-buffer) nil nil))
-  (overlay-put hledger-current-entry-overlay
-               'face hledger-current-entry-overlay-face)
-  (add-hook 'post-command-hook 'hledger-update-current-entry-overlay)
+  ;; Make an overlay for current entry if enabled
+  (when hledger-enable-current-overlay
+    (setq hledger-current-entry-overlay
+          (make-overlay (point-max) (point-max) (current-buffer) nil nil))
+    (overlay-put hledger-current-entry-overlay
+                 'face hledger-current-entry-overlay-face)
+    (add-hook 'post-command-hook 'hledger-update-current-entry-overlay))
   ;; How can make this execute lazily?
   (setq hledger-accounts-cache (hledger-get-accounts)))
 
