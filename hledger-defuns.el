@@ -421,5 +421,41 @@ values."
   (hledger-op-on-amount '+))
 
 
+(defun hledger-group-digits (number)
+  "Group the digits of NUMBER to make it more readable.
+Returns a string with commas added appropriately.
+
+Note: I am not handling the edge cases here.  It's okay if the number
+looks ugly when it's small."
+  (let* ((number-string (number-to-string number))
+         (number-hundreds-and-rest (mod number 1000))
+         (number-but-hundreds-and-rest (/ number 1000))
+         (number-tail-string (format "%03d" number-hundreds-and-rest))
+         (number-head-string (if (= 0 number-but-hundreds-and-rest)
+                                 ""
+                               (number-to-string number-but-hundreds-and-rest)))
+         (number-head-pairs (mapcar 'reverse
+                                    (reverse (seq-partition
+                                              (reverse number-head-string)
+                                              2))))
+         (number-head-triplets (mapcar 'reverse
+                                       (reverse (seq-partition
+                                                 (reverse number-head-string)
+                                                 3))))
+         (number-english-format (concat
+                                 (mapconcat 'identity number-head-triplets ",")
+                                 (if number-head-triplets "," "")
+                                 number-tail-string))
+         (number-hindi-format (concat
+                               (mapconcat 'identity number-head-pairs ",")
+                               (if number-head-triplets "," "")
+                               number-tail-string)))
+    ;; Assuming `hledger-currency-string' is already defined.
+    (if (and (boundp 'hledger-currency-string)
+             (equal hledger-currency-string "₹"))
+        number-hindi-format
+      number-english-format)))
+
+
 (provide 'hledger-defuns)
 ;;; hledger-defuns.el ends here

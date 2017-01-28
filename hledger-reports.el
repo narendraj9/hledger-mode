@@ -534,6 +534,7 @@ three times."
          (monthly-savings (/ total-assets-accumulated-this-year 12.0)))
     (list 'avg-income (* monthly-income 1.0)                        ;; Monthly income
           'avg-expenses (* monthly-total-expenses 1.0)              ;; Average expenses
+          'avg-monthly-savings monthly-savings
           'efr (/ liquid-assets (* monthly-essential-expenses 1.0)) ;; Emergency-fund-ratio
           'tfr (/ liquid-assets (* monthly-total-expenses 1.0))     ;; Total-fund ratio | Similar to efr.
           'cr  (/ liquid-assets (* liabilities 1.0))                ;; Current ratio
@@ -543,10 +544,12 @@ three times."
 
 (defun hledger-summarize-ratios (ratios)
   "Return a string summary of RATIOS."
-  (let ((tfr (plist-get ratios 'tfr))
-        (cr (plist-get ratios 'cr))
-        (dr (plist-get ratios 'dr))
-        (sr (plist-get ratios 'sr)))
+  (let* ((tfr (plist-get ratios 'tfr))
+         (cr (plist-get ratios 'cr))
+         (dr (plist-get ratios 'dr))
+         (sr (plist-get ratios 'sr))
+         (extrapolated-decennial-savings
+          (* 12 10 (plist-get ratios 'avg-monthly-savings))))
     (format
      (concat
       (make-string 80 ?=) "\n"
@@ -554,11 +557,14 @@ three times."
       "• Your liquid assets are %.2f times your liabilities/debt.\n"
       "• %.2f%% of your total assets are borrowed.\n"
       "• For the past one year, you have been saving %.2f%% of your average income.\n"
+      "• You assets would roughly increase by %s %s in the next 10 years.\n"
       (make-string 80 ?=) "\n")
      tfr
      cr
      (* dr 100.0)
-     (* sr 100.0))))
+     (* sr 100.0)
+     hledger-currency-string
+     (hledger-group-digits (truncate extrapolated-decennial-savings)))))
 
 (defun hledger-overall-report ()
   "A combination of all the relevant reports."
