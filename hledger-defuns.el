@@ -443,5 +443,28 @@ looks ugly when it's small."
       number-english-format)))
 
 
+(defun hledger-humanize-float-months (n)
+  "Convert a float value N months into a proper human readable string."
+  (let* ((whole-part (truncate n))
+         (decimal-part (- n whole-part))
+         (years (/ whole-part 12))
+         (months (mod whole-part 12))
+         (days (truncate (* 30 decimal-part))))
+    (if (= years days months 0)
+        "0 days"
+      (concat (if (< 0 years) (format "%d year%s "
+                                      years
+                                      (if (< 1 years) "s" ""))
+                "")
+              (if (< 0 months) (format "%d month%s "
+                                       months
+                                       (if (< 1 months) "s" ""))
+                "")
+              (if (< 0 days) (format "%d day%s"
+                                     days
+                                     (if (< 1 days) "s" ""))
+                "")))))
+
+
 (provide 'hledger-defuns)
 ;;; hledger-defuns.el ends here

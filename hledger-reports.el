@@ -559,13 +559,13 @@ three times."
     (format
      (concat
       (make-string 80 ?=) "\n"
-      " • Your liquid assets would be consumed in %.2f months with this lifestyle.\n"
+      " • Your liquid assets would last %s with this lifestyle.\n"
       " • Your liquid assets are %.2f times your liabilities/debt.\n"
       " • %.2f%% of your total assets are borrowed.\n"
       " • For the past one year, you have been saving %.2f%% of your average income.\n"
       " • You assets would roughly increase by %s %s in the next 10 years.\n"
       (make-string 80 ?=) "\n")
-     tfr
+     (hledger-humanize-float-months tfr)
      cr
      (* dr 100.0)
      (* sr 100.0)
