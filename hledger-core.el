@@ -254,7 +254,7 @@ Returns nil if we are at the beginning of the journal."
            (new-bounds (cond
                         ((and x y) (cons y x))
                         ;; We are at the last entry of the journal.
-                        ;; But there is a previous entry.
+                        ;; Either there is a previous entry or there isn't.
                         ((and y (not x)) (cons (or (hledger-forward-entry)
                                                    (point))
                                                (point-max)))
@@ -274,15 +274,19 @@ Returns nil if we are at the beginning of the journal."
   ;; Only run this in a `hledger-mode' buffer. For example, M-x
   ;; command would cause this to fail otherwise.
   (when (eq major-mode 'hledger-mode)
+    ;; Initialize if required.
+    (unless hledger-current-entry-overlay
+      (setq hledger-current-entry-overlay
+            (make-overlay (point-max) (point-max) (current-buffer) t t))
+      (overlay-put hledger-current-entry-overlay
+                   'face hledger-current-entry-overlay-face))
+    ;; Now let's update the overlay.
     (if (and hledger-current-entry-beg
              hledger-current-entry-end
-             (< hledger-current-entry-beg (point) hledger-current-entry-end))
+             (and (<= hledger-current-entry-beg (point))
+                  (< (point) hledger-current-entry-end)))
         nil
-      (let* ((bounds-of-entry (hledger-bounds-of-current-entry))
-             (gap-to-fill (save-excursion
-                            (goto-char (cdr bounds-of-entry))
-                            (- (window-text-width) (current-column)))))
-
+      (let* ((bounds-of-entry (hledger-bounds-of-current-entry)))
         (setq hledger-current-entry-beg (car bounds-of-entry))
         (setq hledger-current-entry-end (cdr bounds-of-entry))
         (move-overlay hledger-current-entry-overlay
