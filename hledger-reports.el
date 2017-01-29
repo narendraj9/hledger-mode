@@ -25,8 +25,9 @@
 
 ;;; Code:
 
-(require 'hledger-core)
+(require 'calendar)
 (require 'cl-lib)
+(require 'hledger-core)
 
 (defconst hledger-jcompletions '("balancesheet"
                                  "daily"
