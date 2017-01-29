@@ -27,6 +27,8 @@
 
 (require 'hledger-core)
 (require 'hledger-reports)
+
+(require 'cl-lib)
 (require 'url)
 (require 'url-http)
 
@@ -102,7 +104,7 @@ Creates some slightly unprobably gibberish."
    "--" boundary "--\n"))
 
 (defun hledger-send-email-with-mailgun (url headers)
- "Send email using Mailgun.
+  "Send email using Mailgun.
 
 Returns a boolean value stating if the operation failed or succeeded.
 t => success nil => failure
@@ -120,7 +122,7 @@ HEADERS is an assoc-list with the headers of the request.
   (to   . TO)
   (subject . SUBJECT)
   (text . TEXT))"
-(let* ((multipart-boundary (hledger-make-multipart-boundary))
+  (let* ((multipart-boundary (hledger-make-multipart-boundary))
          (url-request-method "POST")
          (url-request-extra-headers
           `(("Content-Type" . ,(format
@@ -132,13 +134,22 @@ HEADERS is an assoc-list with the headers of the request.
                                   (assoc-default 'authorization headers))))))
          (url-request-data
           (hledger-make-multipart-url-data multipart-boundary
-                                         (assq-delete-all 'authorization headers))))
-  (let ((url-buffer (url-retrieve-synchronously url)))
-    (if (not url-buffer)
-        nil
-      (with-current-buffer url-buffer
-        (url-http-parse-response)
-        (= url-http-response-status 200))))))
+                                           (assq-delete-all 'authorization
+                                                            headers))))
+    ;; This is a hack until
+    ;; https://lists.gnu.org/archive/html/bug-gnu-emacs/2016-08/msg00031.html
+    ;; is fixed.
+    (let ((_ (defadvice string-bytes (around fake-string-bytes (s))
+               (setq ad-return-value (length s))))
+          (_ (ad-activate 'string-bytes))
+          (url-buffer (url-retrieve-synchronously url))
+          (_ (ad-deactivate 'string-bytes)))
+      ;; Ugly hack ends!
+      (if (not url-buffer)
+          nil
+        (with-current-buffer url-buffer
+          (url-http-parse-response)
+          (= url-http-response-status 200))))))
 
 (defun hledger-send-text-email (url user-and-password from to subject text)
   "Send an email with text body.
