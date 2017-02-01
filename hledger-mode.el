@@ -22,8 +22,9 @@
 
 ;;; Code:
 
-(require 'hledger-core)
 (require 'hledger-defuns)
+(require 'hledger-core)
+(require 'hledger-navigate)
 (require 'hledger-reports)
 (require 'hledger-mail)
 (require 'hledger-webservice)
@@ -62,10 +63,10 @@ COMMAND, ARG and IGNORED the regular meanings."
 (defvar hledger-mode-map
   (let ((map (make-keymap)))
     (define-key map (kbd "C-c C-i") 'hledger-append-clipboard-to-journal)
-    (define-key map (kbd "C-c C-t") 'hledger-toggle-star)
-    (define-key map (kbd "C-c C-r") 'hledger-reschedule)
+    (define-key map (kbd "C-c C-d") 'hledger-reschedule)
+    (define-key map (kbd "C-c C-b") 'hledger-edit-amount)
     (define-key map (kbd "C-c C-p") 'hledger-backward-entry)
-    (define-key map (kbd "C-c C-n") 'hledger-forward-entry)
+    (define-key map (kbd "C-c C-n") 'hledger-next-or-new-entry)
     (define-key map (kbd "RET")  'hledger-ret-command)
     (define-key map (kbd "<backtab>") 'hledger-backtab-command)
     map))

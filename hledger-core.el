@@ -44,28 +44,6 @@
   :group 'hledger
   :type 'integer)
 
-(defcustom hledger-enable-current-overlay nil
-  "Boolean to decide whether to enable current entry overlay."
-  :group 'hledger
-  :type 'boolean)
-
-(defcustom hledger-current-entry-overlay-face
-  '(:background "dark slate grey" :height 1.1)
-  "Face for the current journal entry's overlay."
-  :group 'hledger
-  :type 'face)
-
-(defvar hledger-current-entry-beg nil
-  "Variable to store the (point) for beginning of current entry.")
-(make-variable-buffer-local 'hledger-current-entry-beg)
-
-(defvar hledger-current-entry-end nil
-  "Variable to store the (point) for end of current entry.")
-(make-variable-buffer-local 'hledger-current-entry-end)
-
-(defvar hledger-current-entry-overlay nil
-  "Overlay that spans the currently journal entry.")
-
 ;;; Regexes
 (defvar hledger-empty-regex "^\\s-*$"
   "Regular expression for an empty line.")
@@ -225,97 +203,6 @@ interactively editing an entry."
        ((hledger-cur-starts-with-semicolp) (indent-line-to hledger-comments-column))
        ((hledger-cur-has-accp) (indent-line-to tab-width)))
       (forward-line 1))))
-
-(defun hledger-forward-entry (&optional n)
-  "Move past N hledger entries.
-With a prefix argument, repeat that many times.
-Returns nil if we have reached the end of the journal."
-  (interactive "p")
-  ;; To make sure we are not on the date of the first entry.
-  (end-of-line)
-  (let ((p (search-forward-regexp hledger-date-regex nil t (or n 1))))
-    (forward-line 0)
-    (and p (point))))
-
-(defun hledger-backward-entry (&optional n)
-  "Move backward by N hledger entries.
-With a prefix argument, repeat that many times.
-Returns nil if we are at the beginning of the journal."
-  (interactive "p")
-  ;; To make sure we skip the current entry.
-  (forward-line 0)
-  (search-backward-regexp hledger-date-regex nil t (or n 1)))
-
-(defun hledger-bounds-of-current-entry ()
-  "Return the bounds of the current journal entry."
-  (save-excursion
-    (let* ((x (hledger-forward-entry))
-           (y (hledger-backward-entry))
-           (new-bounds (cond
-                        ((and x y) (cons y x))
-                        ;; We are at the last entry of the journal.
-                        ;; Either there is a previous entry or there isn't.
-                        ((and y (not x)) (cons (or (hledger-forward-entry)
-                                                   (point))
-                                               (point-max)))
-                        ;; We are at the first entry of the journal.
-                        ;; Will these ever be reached?
-                        ((not y) (cons x (hledger-forward-entry)))))
-           (new-x (car new-bounds)))
-      ;; Skip empty lines from the overlay
-      (goto-char (cdr new-bounds))
-      (while (or (looking-at hledger-empty-regex)
-                 (looking-at hledger-date-regex))
-        (forward-line -1))
-      (cons new-x (line-end-position)))))
-
-(defun hledger-update-current-entry-overlay ()
-  "Update the overlay for the current journal entry."
-  ;; Only run this in a `hledger-mode' buffer. For example, M-x
-  ;; command would cause this to fail otherwise.
-  (when (eq major-mode 'hledger-mode)
-    ;; Initialize if required.
-    (unless hledger-current-entry-overlay
-      (setq hledger-current-entry-overlay
-            (make-overlay (point-max) (point-max) (current-buffer) t t))
-      (overlay-put hledger-current-entry-overlay
-                   'face hledger-current-entry-overlay-face))
-    ;; Now let's update the overlay.
-    (if (and hledger-current-entry-beg
-             hledger-current-entry-end
-             (and (<= hledger-current-entry-beg (point))
-                  (< (point) hledger-current-entry-end)))
-        nil
-      (let* ((bounds-of-entry (hledger-bounds-of-current-entry)))
-        (setq hledger-current-entry-beg (car bounds-of-entry))
-        (setq hledger-current-entry-end (cdr bounds-of-entry))
-        (move-overlay hledger-current-entry-overlay
-                      hledger-current-entry-beg
-                      hledger-current-entry-end)
-        (overlay-put hledger-current-entry-overlay
-                     'after-string
-                     (propertize " "
-                                 'display
-                                 `((space :align-to ,(window-text-width)))
-                                 'face hledger-current-entry-overlay-face
-                                 'cursor t))))))
-
-(defun hledger-toggle-star ()
-  "Toggle the star status of a journal entry."
-  (interactive)
-  (save-excursion
-    (let ((there (line-end-position)))
-      (beginning-of-line)
-      (while (not (looking-at hledger-date-and-desc-regex))
-        (forward-line -1))
-      ;; Update the date to today after each toggle
-      (search-forward-regexp hledger-date-regex nil t)
-      (delete-region (line-beginning-position) (point))
-      (hledger-insert-date)
-      ;; Now handle the start/unstar stuff
-      (if (search-forward "*" there t)
-          (delete-char -3)
-        (insert "*")))))
 
 (provide 'hledger-core)
 ;;; hledger-core.el ends here

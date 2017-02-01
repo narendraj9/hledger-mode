@@ -29,6 +29,8 @@
   (require 'cl-lib))
 (require 'popup)
 
+(require 'hledger-core)
+
 (defcustom hledger-display-percentage-face
   '(:foreground "Cornsilk" :background "DarkSlateGray")
   "Face for showing the percentage of a set of balances around point."
@@ -56,31 +58,6 @@
 (defcustom hledger-percentage-chart-width
   20
   "Width of the percentage chart.")
-
-;; Things in hledger
-(defvar hledger-amount 0
-  "Variable to be used for looking at amount at point.")
-(defvar hledger-date "18-06-1993"
-  "Variable to be used for looking at date at point.")
-(defvar hledger-account "assets"
-  "Variable to be used for looking at account name at point.")
-
-(defun hledger-ret-command ()
-  "Commands run on <return> in ‘hledger-mode’."
-  (interactive)
-  (newline-and-indent))
-
-(defun hledger-backtab-command ()
-  "Commands runon <backtab> in ‘hledger-mode’."
-  (interactive)
-  (backward-delete-char-untabify tab-width))
-
-(defun hledger-kill-reporting-window ()
-  "Kill the reporting buffer and window."
-  (interactive)
-  (if (>= (length (window-list)) 2)
-      (kill-buffer-and-window)
-    (kill-buffer)))
 
 (defun hledger-copy-to-clipboard ()
   "Copies current buffer contents to clipboard."
@@ -121,46 +98,8 @@
                 (current-local-map))
     (popup-tip result :margin t)))
 
-(defun hledger-move-line (count)
-  "Move COUNT lines skipping all empty lines."
-  (forward-line count)
-  (while (and (or (not (looking-at (concat hledger-whitespace-account-regex
-                                           "\\|"
-                                           hledger-whitespace-amount-regex)))
-                  (looking-at hledger-empty-regex))
-              (not (or (bobp) (eobp))))
-    (forward-line (if (> count 0) 1 -1))))
-
-(defun hledger-next-line ()
-  "Move to next line.  See `hledger-move-line'."
-  (interactive)
-  (hledger-move-line 1))
-
-(defun hledger-prev-line ()
-  "Move to previous line.  See `hledger-move-line'."
-  (interactive)
-  (hledger-move-line -1))
-
-
-(defun hledger-reschedule ()
-  "Reschedule the transaction at point.
-Note: This function uses `org-read-date'."
-  (interactive)
-  (save-excursion
-    (let ((new-date (org-read-date)))
-      (forward-line 0)
-      (when (not (looking-at hledger-date-regex))
-        (search-backward-regexp hledger-date-regex))
-      ;; Erase the old date
-      (delete-region (line-beginning-position)
-                     (search-forward-regexp hledger-date-regex))
-      ;; Insert the new date
-      (insert new-date))))
-
-
 (defvar hledger-display-percentages nil
   "Variable accompanying `hledger-display-percentags' to maintain state.")
-
 
 (defun hledger-remove-overlays ()
   "Remove overlays from beg to end in `hledger-display-percentages'."
@@ -170,12 +109,10 @@ Note: This function uses `org-read-date'."
                    ;; char
                    (+ 2 (get 'hledger-display-percentages 'end))))
 
-
 (defun hledger-remove-overlays-hook ()
   "Hook to be called for removing overlays created for % display."
   (remove-hook 'post-command-hook #'hledger-remove-overlays-hook)
   (add-hook 'post-command-hook #'hledger-remove-overlays))
-
 
 (defun hledger-find-balance-delimits ()
   "Return the beginning and end point positions for shown --flat bals.
@@ -200,7 +137,6 @@ not balance at point."
                 (point))))
     (when (< beg end)
       (cons beg end))))
-
 
 (defun hledger-display-percentages ()
   "Display percentages for the balances around the point."
@@ -300,66 +236,7 @@ reverse the direction of sorting."
         (reverse-region beg end))))
 
 
-(defun hledger-bounds-of-thing-at-point (thing-regexp &optional sep-regexp)
-  "Return the (beg . end) point positions for amount at point.
-To make this work, one must be either inside or after thing at point in buffer.
-Argument THING-REGEXP is the regular expression that matches the thing.
-Optional argument SEP-REGEXP is the regular expression that separates things."
-  (let* ((here (point))
-         ;; Search back for separator
-         (beg (progn
-                (when (search-backward-regexp (or sep-regexp
-                                                  "\\s-+")
-                                              (point-min)
-                                              t)
-                  (search-forward-regexp (or sep-regexp
-                                             "\\s-+")
-                                         here
-                                         t))))
-         ;; Search forward for separator
-         (end-bound (save-excursion
-                      (search-forward-regexp (or sep-regexp
-                                                 "\\s-+")
-                                             (point-max)
-                                             t)))
-         ;; Search for the thing starting the first separator ^
-         (end (search-forward-regexp thing-regexp
-                                     (or end-bound
-                                         (point-max))
-                                     t)))
-    ;; Restore point
-    (goto-char here)
-    ;; If any one of the ends is nil, return nil.
-    (and (and beg end)
-         (cons beg end))))
 
-
-(defun hledger-bounds-of-account-at-point ()
-    "Return the bounds of an account name at point."
-  (hledger-bounds-of-thing-at-point hledger-account-regex))
-
-
-(defun hledger-bounds-of-date-at-point ()
-    "Return the bounds of date at point."
-  (hledger-bounds-of-thing-at-point hledger-date-regex))
-
-
-(defun hledger-bounds-of-amount-at-point ()
-  "Return the bounds of a floating point number at point."
-  (hledger-bounds-of-thing-at-point hledger-amount-value-regex))
-
-
-(defun hledger-init-thing-at-point ()
-    "Setup properties for thingatpt.el."
-  (put 'hledger-account
-       'bounds-of-thing-at-point
-       'hledger-bounds-of-account-at-point)
-  (put 'hledger-amount
-       'bounds-of-thing-at-point
-       'hledger-bounds-of-amount-at-point)
-  (put 'hledger-date
-       'bounds-of-thing-at-point
-       'hledger-bounds-of-date-at-point))
 
 
 (defun hledger-amounts-in-column ()
@@ -399,22 +276,6 @@ values."
         (cons amounts
               (cons beg end))))))
 
-
-(defun hledger-op-on-amount (op)
-  "Apply operation OP on the previous amount in sight."
-  (save-excursion
-    (search-backward-regexp hledger-amount-value-regex)
-    (let* ((amount (thing-at-point 'number))
-           (new-amount (funcall op amount)))
-      (replace-match (number-to-string new-amount)))))
-
-
-(defun hledger-increment-amount ()
-  "Increment amount by 1."
-  (interactive)
-  (hledger-op-on-amount '+))
-
-
 (defun hledger-group-digits (number)
   "Group the digits of NUMBER to make it more readable.
 Returns a string with commas added appropriately.
@@ -450,7 +311,6 @@ looks ugly when it's small."
         number-hindi-format
       number-english-format)))
 
-
 (defun hledger-humanize-float-months (n)
   "Convert a float value N months into a proper human readable string."
   (let* ((whole-part (truncate n))
@@ -472,7 +332,6 @@ looks ugly when it's small."
                                      days
                                      (if (< 1 days) "s" ""))
                 "")))))
-
 
 (provide 'hledger-defuns)
 ;;; hledger-defuns.el ends here

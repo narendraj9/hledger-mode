@@ -195,16 +195,6 @@ time."
       (save-buffer)
     (ignore)))
 
-(defun hledger-go-to-starting-line ()
-  "Function to go the first line that stars a new entry.  Cleans up whitespace."
-  (goto-char (point-max))
-  (beginning-of-line)
-  (while (looking-at hledger-empty-regex)
-    (forward-line -1))
-  (end-of-line)
-  (let ((times-yet-to-move (forward-line 2)))
-    (insert (make-string times-yet-to-move ?\n))))
-
 (defun hledger-get-perfin-buffer (&optional keep-bufferp fetched-entriesp)
   "Get/create the `hledger-reporting-buffer-name' buffer.
 If the buffer is not intended for editing, then `q` closes it.
@@ -226,14 +216,6 @@ non-nil, it lands us in the `hledger-mode' ."
       (or keep-bufferp (progn (delete-region (point-min) (point-max))
                               (delete-all-overlays))))
     jbuffer))
-
-
-(defun hledger-jentry ()
-  "Make a new entry in the financial journal.  Avoids editing old entries."
-  (interactive)
-  (find-file hledger-jfile)
-  (hledger-go-to-starting-line)
-  (recenter))
 
 (defun hledger-run-command (command)
   "Run an hledger COMMAND."
