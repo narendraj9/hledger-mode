@@ -236,9 +236,12 @@ non-nil, it lands us in the `hledger-mode' ."
 
 (defun hledger-get-accounts ()
   "Return list of account names."
-  (let* ((hledger-jfile (buffer-file-name))
-         (accounts-string (shell-command-to-string
-                           (concat "hledger -f" hledger-jfile " accounts")))
+  (let* ((accounts-string (shell-command-to-string
+                           (concat "hledger -f"
+                                   (if (eq major-mode 'hledger-mode)
+                                       (buffer-file-name)
+                                       hledger-jfile)
+                                   " accounts")))
          (accounts-list (split-string accounts-string)))
     accounts-list))
 

@@ -38,6 +38,26 @@
   :type 'hook
   :group 'hledger)
 
+(defcustom hledger-date-face font-lock-string-face
+  "Face for date."
+  :type 'face
+  :group 'hledger)
+
+(defcustom hledger-amount-face font-lock-constant-face
+  "Face for date."
+  :type 'face
+  :group 'hledger)
+
+(defcustom hledger-account-face font-lock-variable-name-face
+  "Face for date."
+  :type 'face
+  :group 'hledger)
+
+(defcustom hledger-description-face nil
+  "Face for description text."
+  :type 'face
+  :group 'hledger)
+
 (defvar hledger-accounts-cache nil
   "List of accounts cached for ac and company modes.")
 
@@ -100,9 +120,9 @@ COMMAND, ARG and IGNORED the regular meanings."
 
 (defconst hledger-font-lock-keywords-1
   (list
-   `(,hledger-account-regex . font-lock-variable-name-face)
-   `(,hledger-date-regex . font-lock-string-face)
-   `(,hledger-amount-regex . font-lock-constant-face))
+   `(,hledger-account-regex . hledger-account-face)
+   `(,hledger-date-regex . hledger-date-face)
+   `(,hledger-amount-regex . hledger-amount-face))
   "Minimal highlighting expressions for hledger mode.")
 
 (defvar hledger-font-lock-defaults '(hledger-font-lock-keywords-1)
@@ -145,6 +165,24 @@ viewing reports and the journal file. I require the same kind of syntax
 highlighting in both kinds of buffers."
   :syntax-table hledger-mode-syntax-table
   (setq font-lock-defaults hledger-font-lock-defaults)
+  ;; Populate accounts cache if not already.
+  (or hledger-accounts-cache
+      (setq hledger-accounts-cache (hledger-get-accounts)))
+  ;; Setting up font-lock for partial account names.  This is only to
+  ;; make sure they have the right face in a tree-type report. Why?
+  ;; Why not!?
+  (let* ((account-words (apply 'append
+                               (mapcar (lambda (s)
+                                         (split-string s ":" t))
+                                       hledger-accounts-cache)))
+         (font-lock-acc-string (concat "\\<\\("
+                                       (mapconcat 'identity
+                                                  (delete-dups account-words)
+                                                  "\\|")
+                                       "\\)\\>")))
+    ;; Do this only in view mode
+    (font-lock-add-keywords 'hledger-view-mode
+                            `((,font-lock-acc-string . hledger-account-face))))
   ;; Avoid wrapping lines in reports
   (setq truncate-lines t)
   (hledger-init-thing-at-point))
