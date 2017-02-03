@@ -77,26 +77,6 @@
       (kill-buffer-and-window)
     (kill-buffer)))
 
-(defun hledger-move-line (count)
-  "Move COUNT lines skipping all empty lines."
-  (forward-line count)
-  (while (and (or (not (looking-at (concat hledger-whitespace-account-regex
-                                           "\\|"
-                                           hledger-whitespace-amount-regex)))
-                  (looking-at hledger-empty-regex))
-              (not (or (bobp) (eobp))))
-    (forward-line (if (> count 0) 1 -1))))
-
-(defun hledger-next-line ()
-  "Move to next line.  See `hledger-move-line'."
-  (interactive)
-  (hledger-move-line 1))
-
-(defun hledger-prev-line ()
-  "Move to previous line.  See `hledger-move-line'."
-  (interactive)
-  (hledger-move-line -1))
-
 (defun hledger-reschedule ()
   "Reschedule the transaction at point.
 Note: This function uses `org-read-date'."
