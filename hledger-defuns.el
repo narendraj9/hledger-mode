@@ -333,5 +333,14 @@ looks ugly when it's small."
                                      (if (< 1 days) "s" ""))
                 "")))))
 
+(defun hledger-completion-at-point ()
+  "Adding this for account name completions in `minibuffer'."
+  (interactive)
+  (let* ((bounds (bounds-of-thing-at-point 'word))
+         (start (car bounds))
+         (end (cdr bounds)))
+    (list start end hledger-accounts-cache . nil)))
+
+
 (provide 'hledger-defuns)
 ;;; hledger-defuns.el ends here

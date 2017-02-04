@@ -122,6 +122,12 @@ I taint entries with a star, to declare that they haven't been effective yet."
   :group 'hledger
   :type 'face)
 
+(defcustom hledger-width-spec
+  '(100 . 40)
+  "(# columns for the entry . # columns for description) for an entry."
+  :group 'hledger
+  :type 'string)
+
 (defvar hledger-last-run-command nil
   "Last run hledger-command.")
 
@@ -219,7 +225,12 @@ non-nil, it lands us in the `hledger-mode' ."
 
 (defun hledger-run-command (command)
   "Run an hledger COMMAND."
-  (interactive (list (completing-read "jdo> " hledger-jcompletions)))
+  (interactive (list (completing-read "jdo> "
+                                      hledger-jcompletions
+                                      nil
+                                      t)))
+  ;; Help other functions keep track of history.
+  (setq hledger-last-run-command command)
   (hledger-ask-and-save-buffer)
   (let ((inhibit-read-only t))
     (pcase command
@@ -228,9 +239,11 @@ non-nil, it lands us in the `hledger-mode' ."
       (`"overall" (hledger-overall-report)
        (pop-to-buffer hledger-reporting-buffer-name)
        (delete-other-windows))
-      (_ (hledger-jdo command))))
-  ;; Help other functions keep track of history.
-  (setq hledger-last-run-command command)
+      ;; Allow account completion for
+      (command (if (and (member command '("balance" "register"))
+                        (called-interactively-p 'interactive))
+                   (hledger-jdo-with-account-completion command)
+                 (hledger-jdo command)))))
   (when (called-interactively-p 'interactive)
     (setq hledger-last-run-time 0)))
 
@@ -278,6 +291,48 @@ easily."
                     (hledger-friendlier-time (current-time))
                     (format-time-string "%A" (current-time)))))
     jbuffer))
+
+(defun hledger-jdo-with-account-completion (command)
+  "Run COMMAND with completions for account names."
+  (let* ((crm-separator " ")
+         (command-flags
+          (completing-read-multiple (format "%s: " command)
+                                    (mapcar (lambda (account)
+                                              (concat account crm-separator))
+                                            (or hledger-accounts-cache
+                                                (setq hledger-accounts-cache
+                                                      (hledger-get-accounts))))))
+         (command-string (mapconcat 'identity
+                                    (cons command command-flags)
+                                    " ")))
+    (hledger-run-command command-string)))
+
+(defun hledger-jdo-redo-with (append-string)
+  "Append APPEND-STRING to `hledger-last-run-command' and re-run."
+  (hledger-run-command (format "%s %s"
+                               hledger-last-run-command
+                               append-string)))
+
+(defun hledger-redo ()
+  "Repeat the last command."
+  (interactive)
+  (hledger-jdo-redo-with ""))
+
+(defvar hledger--ic 0
+  "Variable to track increments in width for register command.")
+(defun hledger-widen-results-for-register ()
+  "Widen the results of the last command.
+Works only for register command."
+  (interactive)
+  (if (not (string-prefix-p "register" hledger-last-run-command))
+      (setq hledger--ic 0)
+    (setq hledger--ic (+ hledger--ic 4))
+    (hledger-run-command (format "%s --width %s,%s"
+                                 hledger-last-run-command
+                                 (+ (car hledger-width-spec)
+                                    hledger--ic)
+                                 (+ (cdr hledger-width-spec)
+                                    (- hledger--ic 2))))))
 
 (defun hledger-jreg (pattern)
   "Run hledger register command with PATTERN as argument."
