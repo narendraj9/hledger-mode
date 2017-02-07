@@ -44,6 +44,15 @@ to your Emacs add it to `load-path`.
 
 ```
 
+## Configuration
+
+For configuring various parameters, e.g. the accounts used for
+computing ratios in the overall report, `M-x customize-group` and
+customize the `hledger` group. For example, the Emergency Fund Ratio
+is computed with expenses incurred in accounts listed in the variable
+`hledger-ratios-essential-expense-accounts`.
+
+
 ## Usage
 
 I recommend the following key bindings:
