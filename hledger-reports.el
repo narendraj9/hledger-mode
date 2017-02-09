@@ -309,7 +309,7 @@ easily."
 
 (defun hledger-jdo-redo-with (append-string)
   "Append APPEND-STRING to `hledger-last-run-command' and re-run."
-  (hledger-run-command (format "%s %s"
+  (hledger-run-command (format "%s%s"
                                hledger-last-run-command
                                append-string)))
 
@@ -332,7 +332,7 @@ Works only for register command."
                                  (+ (car hledger-width-spec)
                                     hledger--ic)
                                  (+ (cdr hledger-width-spec)
-                                    (- hledger--ic 2))))))
+                                    (- hledger--ic 3))))))
 
 (defun hledger-jreg (pattern)
   "Run hledger register command with PATTERN as argument."
