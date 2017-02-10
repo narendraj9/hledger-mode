@@ -25,8 +25,7 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'cl-lib))
+(require 'cl-lib)
 (require 'popup)
 
 (require 'hledger-core)
@@ -177,8 +176,8 @@ not balance at point."
                (neg-amounts (seq-filter (lambda (n)
                                           (not (< 0 n)))
                                         amounts))
-               (pos-amounts-sum (reduce '+ pos-amounts :initial-value 0.0))
-               (neg-amounts-sum (reduce '+ neg-amounts :initial-value 0.0))
+               (pos-amounts-sum (cl-reduce '+ pos-amounts :initial-value 0.0))
+               (neg-amounts-sum (cl-reduce '+ neg-amounts :initial-value 0.0))
                (hledger-pchart-format
                 (concat "%-"
                         (number-to-string hledger-percentage-chart-width)
