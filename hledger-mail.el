@@ -73,6 +73,12 @@ I am not checking the range.  You are own your own."
   :group 'hledger
   :type 'integer)
 
+(defcustom hledger-email-secrets-file
+  (and (boundp 'secrets-file) secrets-file)
+  "Path to the file containing EMAIL API credentials."
+  :group 'hledger
+  :type 'string)
+
 (defvar hledger-email-next-reporting-time
   (let* ((time (current-time))
          (day (string-to-number (format-time-string "%d" time)))
@@ -238,43 +244,43 @@ Returns t if the operation was successful."
     success))
 
 (defun hledger-mail-reports-run-async-task ()
-    "Async task for emailing the reports.
+  "Async task for emailing the reports.
 This isn't meant to be useful for anybody other than myself.  This is extermely
 inefficient."
-    (require 'async)
-    (async-start
-     `(lambda ()
-        (message "Started the new emacs process.")
-        (setq load-path (quote ,load-path))
-        (setq hledger-jfile ,hledger-jfile)
-        (message "--> Loading hledger-mode.")
-        (require 'hledger-mode)
-        ;; This requires secrets. So, we don't do anything if there is
-        ;; no secrets file.
-        (when (file-exists-p ,secrets-file)
-          (load ,secrets-file)
-          (let ((epoch (current-time)))
-            ;; Seed waiting time. To make exponential back-off simpler.
-            ;; Sleeping times go like this: t(n) = 2 * Σ t(i) for all i < n
-            ;; and t(0) = `hledger-email-reporting-retry-interval'.
-            (message "--> Sleeping for %.0f seconds"
-                     hledger-email-reporting-retry-interval)
-            (sleep-for hledger-email-reporting-retry-interval)
-            (while (not (ignore-errors (hledger-mail-reports)))
-              (message "--> Hledger email reporting: Failed.")
-              (let ((waiting-time (* 2 (time-to-seconds
-                                        (time-subtract (current-time)
-                                                       epoch)))))
-                (message "--> Sleeping for %.0f seconds" waiting-time)
-                (sleep-for waiting-time)))
-            t)))
-     (lambda (success)
-       (if success
-           (progn
-             (customize-save-variable 'hledger-email-next-reporting-time
-                                      (hledger-compute-next-reporting-time))
-             (message "Hledger email reporting: Ok"))
-         (message "Hledger email reporting: Failed")))))
+  (require 'async)
+  (async-start
+   `(lambda ()
+      (message "Started the new emacs process.")
+      ,(async-inject-variables
+        "hledger-jfile\\|load-path\\|hledger-email-secrets-file")
+      (message "--> Loading hledger-mode.")
+      (require 'hledger-mode)
+      ;; This requires secrets. So, we don't do anything if there is
+      ;; no secrets file.
+      (when (file-exists-p ,secrets-file)
+        (load ,hledger-email-secrets-file)
+        (let ((epoch (current-time)))
+          ;; Seed waiting time. To make exponential back-off simpler.
+          ;; Sleeping times go like this: t(n) = 2 * Σ t(i) for all i < n
+          ;; and t(0) = `hledger-email-reporting-retry-interval'.
+          (message "--> Sleeping for %.0f seconds"
+                   hledger-email-reporting-retry-interval)
+          (sleep-for hledger-email-reporting-retry-interval)
+          (while (not (ignore-errors (hledger-mail-reports)))
+            (message "--> Hledger email reporting: Failed.")
+            (let ((waiting-time (* 2 (time-to-seconds
+                                      (time-subtract (current-time)
+                                                     epoch)))))
+              (message "--> Sleeping for %.0f seconds" waiting-time)
+              (sleep-for waiting-time)))
+          t)))
+   (lambda (success)
+     (if success
+         (progn
+           (customize-save-variable 'hledger-email-next-reporting-time
+                                    (hledger-compute-next-reporting-time))
+           (message "Hledger email reporting: Ok"))
+       (message "Hledger email reporting: Failed")))))
 
 ;;;###autoload
 (defun hledger-enable-reporting ()
