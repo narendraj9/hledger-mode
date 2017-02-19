@@ -183,7 +183,8 @@ highlighting in both kinds of buffers."
                                        "\\)\\>")))
     ;; Do this only in view mode
     (font-lock-add-keywords 'hledger-view-mode
-                            `((,font-lock-acc-string . hledger-account-face))))
+                            `((,font-lock-acc-string . hledger-account-face)
+                              (":" . hledger-account-face))))
   ;; Avoid wrapping lines in reports
   (setq truncate-lines t)
   (hledger-init-thing-at-point))
