@@ -614,14 +614,19 @@ three times."
    making your net worth %s %s.
 "
       (make-string 80 ?=) "\n")
-     (hledger-humanize-float-months tfr)
+     ;; @TODO: Show a message asking the user to customize 'hledger
+     ;; group
+     (or (ignore-errors (hledger-humanize-float-months tfr))
+         "nan")
      cr
      (* dr 100.0)
      (* sr 100.0)
      hledger-currency-string
-     (hledger-group-digits (truncate extrapolated-decennial-savings))
+     (or (ignore-errors (hledger-group-digits (truncate extrapolated-decennial-savings)))
+         "nan")
      hledger-currency-string
-     (hledger-group-digits (truncate extrapolated-net-worth)))))
+     (or (ignore-errors (hledger-group-digits (truncate extrapolated-net-worth)))
+         "nan"))))
 
 (defun hledger-overall-report ()
   "A combination of all the relevant reports."
