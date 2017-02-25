@@ -760,7 +760,10 @@ To be called once you have run a report that sets `hledger-last-run-command'."
     (`"daily" (hledger-run-command-for-day hledger-last-run-time
                                            hledger-last-run-command))
     (_ (hledger-run-command-for-month hledger-last-run-time
-                                      hledger-last-run-command))))
+                                      hledger-last-run-command)))
+  (pulse-momentary-highlight-region (point-min)
+                                    (point-max)
+                                    'next-error))
 
 (defun hledger-next-report ()
   "Takes your report forward in time.
@@ -771,7 +774,10 @@ See `hledger-prev-report'."
     (`"daily" (hledger-run-command-for-day hledger-last-run-time
                                            hledger-last-run-command))
     (_ (hledger-run-command-for-month hledger-last-run-time
-                                      hledger-last-run-command))))
+                                      hledger-last-run-command)))
+  (pulse-momentary-highlight-region (point-min)
+                                    (point-max)
+                                    'next-error))
 
 (defun hledger-refresh-buffer ()
   "Hack to refresh current report using `hledger-prev-report'."
