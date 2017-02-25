@@ -27,6 +27,8 @@
 
 (require 'calendar)
 (require 'cl-lib)
+(require 'pulse)
+
 (require 'hledger-core)
 
 (defconst hledger-jcompletions '("balancesheet"
@@ -245,7 +247,10 @@ non-nil, it lands us in the `hledger-mode' ."
                    (hledger-jdo-with-account-completion command)
                  (hledger-jdo command)))))
   (when (called-interactively-p 'interactive)
-    (setq hledger-last-run-time 0)))
+    (setq hledger-last-run-time 0))
+  (pulse-momentary-highlight-region (point-min)
+                                    (point-max)
+                                    'next-error))
 
 (defun hledger-get-accounts ()
   "Return list of account names."
@@ -253,7 +258,7 @@ non-nil, it lands us in the `hledger-mode' ."
                            (concat "hledger -f"
                                    (if (eq major-mode 'hledger-mode)
                                        (buffer-file-name)
-                                       hledger-jfile)
+                                     hledger-jfile)
                                    " accounts")))
          (accounts-list (split-string accounts-string)))
     accounts-list))
