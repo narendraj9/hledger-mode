@@ -189,7 +189,7 @@ time."
 
 (defun hledger-shell-command-to-string (command-string)
   "Return the result of running COMMAND-STRING has an hledger command."
-(shell-command-to-string (concat "hledger -f "
+  (shell-command-to-string (concat "hledger -f "
                                    (shell-quote-argument hledger-jfile)
                                    " "
                                    command-string)))
@@ -260,6 +260,12 @@ non-nil, it lands us in the `hledger-mode' ."
                                    " accounts")))
          (accounts-list (split-string accounts-string)))
     accounts-list))
+
+(defun hledger-get-balances (accounts)
+  "Return balances for the sequence of ACCOUNTS."
+  (hledger-shell-command-to-string (mapconcat 'identity
+                                              (cons "balance -N" accounts)
+                                              " ")))
 
 (defun hledger-jdo (command &optional keep-bufferp bury-bufferp)
   "Run a hledger COMMAND on the journal file.

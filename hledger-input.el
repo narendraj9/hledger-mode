@@ -28,11 +28,19 @@
 ;;; Code:
 (require 'hledger-core)
 (require 'hledger-mode)
+(require 'hledger-reports)
 
 (defcustom hledger-input-buffer-height 10
   "Number of lines to show in the hledger input buffer."
   :group 'hledger
   :type 'numebr)
+
+(defvar hledger-input-pre-commit-hook nil
+  "Hook run in the input buffer before a commit to `hledger-jfile'.")
+
+(defvar hledger-input-post-commit-hook nil
+  "Hook run after commit to `hledger-file' before closing the input buffer.
+A useful function for this would be `hledger-show-new-balances'.")
 
 (defvar hledger-input-mode-map
   (let ((map (copy-keymap hledger-mode-map)))
@@ -52,10 +60,29 @@ This setups up the minor mode and narrowing in the input buffer."
       (hledger-input-mode +1)
       input-buffer)))
 
+(defun hledger-get-accounts-in-buffer ()
+  "Return a sequence of accounts currently in buffer."
+  (let ((result '()))
+    (save-excursion
+      (goto-char (point-min))
+      (while (search-forward-regexp hledger-account-regex
+                                    nil
+                                    t)
+        (push (substring-no-properties (thing-at-point 'hledger-account))
+              result)))
+    result))
+
+(defun hledger-show-new-balances ()
+  "Show balances new balances for the accounts in buffer."
+  (let* ((accounts (hledger-get-accounts-in-buffer))
+         (balance-report-string (hledger-get-balances accounts)))
+    (message balance-report-string)))
+
 (defun hledger-commit-input ()
   "Commit INPUT-BUFFER contents to `hledger-jfile'.
 We are already in the input-buffer."
   (interactive)
+  (run-hooks 'hledger-input-pre-commit-hook)
   (let ((new-input (buffer-substring (point-min)
                                      (point-max))))
     (whitespace-cleanup)
@@ -64,8 +91,9 @@ We are already in the input-buffer."
       (insert new-input)
       (save-buffer)
       (kill-buffer)))
-  (kill-buffer)
-  (message "Saved input to journal file"))
+  (message "Saved input to journal file")
+  (run-hooks 'hledger-input-post-commit-hook)
+  (kill-buffer))
 
 (defun hledger-discard-input ()
   "Discard entry in input-buffer and go back to previous window configuration."
