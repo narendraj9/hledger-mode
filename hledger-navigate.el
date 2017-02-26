@@ -29,6 +29,10 @@
 ;;; Code:
 
 (require 'hledger-core)
+(require 'pulse)
+
+(defvar hledger-jentry-hook nil
+  "Hook for `hledger-jentry'.")
 
 ;; Things in hledger
 (defvar hledger-amount 0
@@ -60,6 +64,17 @@
 (defvar hledger-current-entry-overlay nil
   "Overlay that spans the currently journal entry.")
 
+(defun hledger-pulse-momentary-current-entry ()
+  "Pulse highlight journal entry at point."
+  (save-excursion
+    (pulse-momentary-highlight-region
+     (if (looking-at hledger-date-regex)
+         (line-beginning-position)
+       (or (hledger-backward-entry)
+           (point-min)))
+     (or (hledger-forward-entry) (point-max))
+     'next-error)))
+
 (defun hledger-ret-command ()
   "Commands run on <return> in ‘hledger-mode’."
   (interactive)
@@ -90,13 +105,16 @@ Note: This function uses `org-read-date'."
       (delete-region (line-beginning-position)
                      (search-forward-regexp hledger-date-regex))
       ;; Insert the new date
-      (insert new-date))))
+      (insert new-date)
+      (pulse-momentary-highlight-region (line-beginning-position)
+                                        (line-end-position)))))
 
 (defun hledger-go-to-starting-line ()
   "Function to go the first line that stars a new entry.  Cleans up whitespace."
   (goto-char (point-max))
   (beginning-of-line)
-  (while (looking-at hledger-empty-regex)
+  (while (and (looking-at hledger-empty-regex)
+              (not (bobp)))
     (forward-line -1))
   (end-of-line)
   (let ((times-yet-to-move (forward-line 2)))
@@ -107,6 +125,7 @@ Note: This function uses `org-read-date'."
   (interactive)
   (find-file hledger-jfile)
   (hledger-go-to-starting-line)
+  (run-hooks 'hledger-jentry-hook)
   (recenter))
 
 (defun hledger-forward-entry (&optional n)
@@ -134,7 +153,7 @@ Returns nil if we are at the beginning of the journal."
   (interactive "p")
   ;; To make sure we skip the current entry.
   (forward-line 0)
-  (search-backward-regexp hledger-date-regex nil t (or n 1)))
+  (when (search-backward-regexp hledger-date-regex nil t (or n 1))))
 
 (defun hledger-bounds-of-thing-at-point (thing-regexp &optional sep-regexp)
   "Return the (beg . end) point positions for amount at point.
@@ -267,14 +286,16 @@ Optional argument SEP-REGEXP is the regular expression that separates things."
 (defun hledger-op-on-amount (op)
   "Apply operation OP on the previous amount in sight."
   (save-excursion
-    (search-backward-regexp hledger-amount-value-regex)
-    (let* ((amount-bounds (bounds-of-thing-at-point 'hledger-amount))
-           (amount (string-to-number (thing-at-point 'hledger-amount)))
-           (beg (car amount-bounds))
-           (end (cdr amount-bounds))
-           (new-amount (funcall op amount)))
-      (delete-region beg end)
-      (insert (format "%s" new-amount)))))
+    (if (search-forward-regexp hledger-amount-value-regex nil t)
+        (let* ((amount-bounds (bounds-of-thing-at-point 'hledger-amount))
+               (amount (string-to-number (thing-at-point 'hledger-amount)))
+               (beg (car amount-bounds))
+               (end (cdr amount-bounds))
+               (new-amount (funcall op amount)))
+          (delete-region beg end)
+          (insert (format "%s" new-amount))
+          (pulse-momentary-highlight-region beg end))
+      (message "No journal entry after point."))))
 
 (defun hledger-increment-amount (&optional p)
   "Increment amount by 1.
