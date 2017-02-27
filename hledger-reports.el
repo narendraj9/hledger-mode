@@ -263,9 +263,14 @@ non-nil, it lands us in the `hledger-mode' ."
 
 (defun hledger-get-balances (accounts)
   "Return balances for the sequence of ACCOUNTS."
-  (hledger-shell-command-to-string (mapconcat 'identity
-                                              (cons "balance -N" accounts)
-                                              " ")))
+  (with-current-buffer (hledger-jdo (mapconcat 'identity
+                                               (cons "balance -N" accounts)
+                                               " ")
+                                    nil t)
+    (font-lock-ensure)
+    (let* ((report-str* (buffer-substring (point-min) (point-max))))
+      (kill-buffer)
+      report-str*)))
 
 (defun hledger-jdo (command &optional keep-bufferp bury-bufferp)
   "Run a hledger COMMAND on the journal file.
