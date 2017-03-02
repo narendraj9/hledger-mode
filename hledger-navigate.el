@@ -144,7 +144,7 @@ Returns nil if we have reached the end of the journal."
 Argument N is passed onto `hledger-forward-entry'."
   (interactive "p")
   (or (hledger-forward-entry n)
-      (hledger-jentry)))
+      (hledger-go-to-starting-line)))
 
 (defun hledger-backward-entry (&optional n)
   "Move backward by N hledger entries.
