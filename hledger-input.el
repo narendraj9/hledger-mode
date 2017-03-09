@@ -99,7 +99,8 @@ We are already in the input-buffer."
   (message "Saved input to journal file")
   (run-hooks 'hledger-input-post-commit-hook)
   (kill-buffer)
-  (delete-window))
+  ;; Delete the window if it's not the sole window.
+  (ignore-errors (delete-window)))
 
 (defun hledger-discard-input ()
   "Discard entry in input-buffer and go back to previous window configuration."
