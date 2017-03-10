@@ -228,9 +228,7 @@ non-nil, it lands us in the `hledger-mode' ."
 (defun hledger-run-command (command)
   "Run an hledger COMMAND."
   (interactive (list (completing-read "jdo> "
-                                      hledger-jcompletions
-                                      nil
-                                      t)))
+                                      hledger-jcompletions)))
   ;; Help other functions keep track of history.
   (setq hledger-last-run-command command)
   (hledger-ask-and-save-buffer)
