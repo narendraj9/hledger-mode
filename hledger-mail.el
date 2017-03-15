@@ -257,7 +257,7 @@ inefficient."
       (require 'hledger-mode)
       ;; This requires secrets. So, we don't do anything if there is
       ;; no secrets file.
-      (when (file-exists-p ,secrets-file)
+      (when (file-exists-p ,hledger-email-secrets-file)
         (load ,hledger-email-secrets-file)
         (let ((epoch (current-time)))
           ;; Seed waiting time. To make exponential back-off simpler.
