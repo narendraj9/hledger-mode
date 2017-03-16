@@ -239,6 +239,8 @@ non-nil, it lands us in the `hledger-mode' ."
       (`"overall" (hledger-overall-report)
        (pop-to-buffer hledger-reporting-buffer-name)
        (delete-other-windows))
+      (`"balancesheet" (hledger-jdo (concat "balancesheet --end "
+                                            (hledger-end-date (current-time)))))
       ;; Allow account completion for
       (command (if (and (member command '("balance" "register"))
                         (called-interactively-p 'interactive))
@@ -766,6 +768,9 @@ To be called once you have run a report that sets `hledger-last-run-command'."
   (pcase hledger-last-run-command
     (`"daily" (hledger-run-command-for-day hledger-last-run-time
                                            hledger-last-run-command))
+    (`"balancesheet" (hledger-run-command-for-day
+                                           hledger-last-run-time
+                                           hledger-last-run-command))
     (_ (hledger-run-command-for-month hledger-last-run-time
                                       hledger-last-run-command)))
   (pulse-momentary-highlight-region (point-min)
@@ -779,6 +784,8 @@ See `hledger-prev-report'."
   (setq hledger-last-run-time (1+ hledger-last-run-time))
   (pcase hledger-last-run-command
     (`"daily" (hledger-run-command-for-day hledger-last-run-time
+                                           hledger-last-run-command))
+    (`"balancesheet" (hledger-run-command-for-day hledger-last-run-time
                                            hledger-last-run-command))
     (_ (hledger-run-command-for-month hledger-last-run-time
                                       hledger-last-run-command)))
