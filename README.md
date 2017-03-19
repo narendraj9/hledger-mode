@@ -82,6 +82,53 @@ Once you have done so, you can enable monthly email reporting on
 
 ```
 
+
+Here is my configuration with `use-package' declarations:
+
+``` elisp
+(use-package hledger-mode
+  :pin manual
+  :after htmlize
+  :load-path "packages/rest/hledger-mode/"
+  :mode ("\\.journal\\'" "\\.hledger\\'")
+  :commands hledger-enable-reporting
+  :preface
+  (defun hledger/next-entry ()
+    "Move to next entry and pulse."
+    (interactive)
+    (hledger-next-or-new-entry)
+    (hledger-pulse-momentary-current-entry))
+
+  (defun hledger/prev-entry ()
+    "Move to last entry and pulse."
+    (interactive)
+    (hledger-backward-entry)
+    (hledger-pulse-momentary-current-entry))
+
+  :bind (("C-c e" . hledger-jentry)
+         ("C-c j" . hledger-run-command)
+         :map hledger-mode-map
+         ("M-p" . hledger/prev-entry)
+         ("M-n" . hledger/next-entry))
+  :init
+  (setq hledger-jfile
+        (expand-file-name "~/miscellany/personal/finance/accounting.journal")
+        hledger-email-secrets-file (expand-file-name "secrets.el"
+                                                     emacs-assets-directory))
+
+  ;; Enable Hledger monthly email reporting This works because of an
+  ;; ugly hack for the time being.
+  (add-hook 'emacs-startup-hook 'hledger-enable-reporting)
+
+  (when (boundp 'my-hledger-service-fetch-url)
+    (setq hledger-service-fetch-url
+          my-hledger-service-fetch-url))
+
+  :config
+  (add-hook 'hledger-view-mode-hook 'hl-line-mode))
+
+```
+
 ## Auxiliary tools
 
 You are welcome to use the web application hosted
