@@ -618,7 +618,7 @@ three times."
                                     extrapolated-decennial-savings)))
     (format
      (concat
-      (make-string 80 ?=)
+      (make-string 80 ?═)
       "
  • Your liquid assets would last %s with this lifestyle.
  • Your liquid assets are %.2f times your liabilities/debt.
@@ -627,7 +627,7 @@ three times."
  • Your assets would roughly increase by %s %s in the next 10 years
    making your net worth %s %s.
 "
-      (make-string 80 ?=) "\n")
+      (make-string 80 ?═) "\n")
      ;; @TODO: Show a message asking the user to customize 'hledger
      ;; group
      (or (ignore-errors (hledger-humanize-float-months tfr))
