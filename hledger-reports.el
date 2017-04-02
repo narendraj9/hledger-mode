@@ -124,6 +124,12 @@ I taint entries with a star, to declare that they haven't been effective yet."
   :group 'hledger
   :type 'face)
 
+(defcustom hledger-ratios-net-worth-in-next-x-years
+  5
+  "Number of years for extrapolation of your net-worth."
+  :group 'hledger
+  :type 'number)
+
 (defcustom hledger-width-spec
   '(100 . 40)
   "(# columns for the entry . # columns for description) for an entry."
@@ -612,10 +618,12 @@ three times."
          (dr (plist-get ratios 'dr))
          (sr (plist-get ratios 'sr))
          (cnw (plist-get ratios 'current-net-worth))
-         (extrapolated-decennial-savings
-          (* 12 10 (plist-get ratios 'avg-monthly-savings)))
+         (extrapolated-savings
+          (* 12
+             hledger-ratios-net-worth-in-next-x-years
+             (plist-get ratios 'avg-monthly-savings)))
          (extrapolated-net-worth (+ cnw
-                                    extrapolated-decennial-savings)))
+                                    extrapolated-savings)))
     (format
      (concat
       (make-string 80 ?═)
@@ -624,7 +632,7 @@ three times."
  • Your liquid assets are %.2f times your liabilities/debt.
  • %.2f%% of your total assets are borrowed.
  • For the past one year, you have been saving %.2f%% of your average income.
- • Your assets would roughly increase by %s %s in the next 10 years
+ • Your assets would roughly increase by %s %s in the next %s years
    making your net worth %s %s.
 "
       (make-string 80 ?═) "\n")
@@ -636,8 +644,9 @@ three times."
      (* dr 100.0)
      (* sr 100.0)
      hledger-currency-string
-     (or (ignore-errors (hledger-group-digits (truncate extrapolated-decennial-savings)))
+     (or (ignore-errors (hledger-group-digits (truncate extrapolated-savings)))
          "nan")
+     hledger-ratios-net-worth-in-next-x-years
      hledger-currency-string
      (or (ignore-errors (hledger-group-digits (truncate extrapolated-net-worth)))
          "nan"))))
