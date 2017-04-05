@@ -31,7 +31,7 @@
 
 ;;; Code:
 
-(require 'emlib)
+; (require 'emlib) ;; not needed yet
 
 (defvar hledger-suggest-model nil
   "Model we will train or read from disk for providing suggestions.")
