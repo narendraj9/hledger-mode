@@ -600,6 +600,9 @@ three times."
          (monthly-income (/ total-income-accumulated-this-year 12.0))
          (monthly-savings (/ total-assets-accumulated-this-year 12.0)))
     (list 'avg-income (* monthly-income 1.0)                        ;; Monthly income
+          'liquid-assets liquid-assets                              ;; Liquid\
+          'total-assets total-assets                                ;; Total /  Assets
+          'liabilities liabilities
           'avg-expenses (* monthly-total-expenses 1.0)              ;; Average expenses
           'avg-monthly-savings monthly-savings                      ;; Average monthly savings
           'total-assets total-assets                                ;; Total assets as of now
@@ -666,6 +669,9 @@ three times."
              (sr (plist-get ratios 'sr))
              (avg-income (plist-get ratios 'avg-income))
              (avg-expenses (plist-get ratios 'avg-expenses))
+             (liquid-assets (plist-get ratios 'liquid-assets))
+             (total-assets (plist-get ratios 'total-assets))
+             (liabilities (plist-get ratios 'liabilities))
              (summary (hledger-summarize-ratios ratios)))
         (goto-char (point-min))
         (forward-line 2)
@@ -675,6 +681,9 @@ three times."
    Emergency Fund Ratio: %-18.2fSavings Ratio: %.2f
    Current Ratio: %-25.2fAverage Income: %s %.0f/month
    Debt Ratio: %-28.2fAverage Expenses: %s %.0f/month
+   ──────────────────────────────────────────────────────────────────
+   Liquid Assets: %s %-23.2fTotal Assets: %s %.2f
+   Liabilities: %s %-28.2f
 
 ╚══════════════════════════════════════╩══════════════════════════════════════════╝
 
@@ -683,6 +692,9 @@ three times."
                         efr sr
                         cr  hledger-currency-string avg-income
                         dr  hledger-currency-string avg-expenses
+                        hledger-currency-string liquid-assets
+                        hledger-currency-string total-assets
+                        hledger-currency-string liabilities
                         (propertize summary
                                     'font-lock-face
                                     hledger-overall-report-summary-text-face))))
