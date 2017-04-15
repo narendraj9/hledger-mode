@@ -672,6 +672,7 @@ three times."
              (liquid-assets (plist-get ratios 'liquid-assets))
              (total-assets (plist-get ratios 'total-assets))
              (liabilities (plist-get ratios 'liabilities))
+             (current-net-worth (plist-get ratios 'current-net-worth))
              (summary (hledger-summarize-ratios ratios)))
         (goto-char (point-min))
         (forward-line 2)
@@ -683,7 +684,7 @@ three times."
    Debt Ratio: %-28.2fAverage Expenses: %s %.0f/month
    ──────────────────────────────────────────────────────────────────
    Liquid Assets: %s %-23.2fTotal Assets: %s %.2f
-   Liabilities: %s %-28.2f
+   Liabilities: %s %-25.2fNet Worth: %s %.2f
 
 ╚══════════════════════════════════════╩══════════════════════════════════════════╝
 
@@ -695,6 +696,7 @@ three times."
                         hledger-currency-string liquid-assets
                         hledger-currency-string total-assets
                         hledger-currency-string liabilities
+                        hledger-currency-string current-net-worth
                         (propertize summary
                                     'font-lock-face
                                     hledger-overall-report-summary-text-face))))
