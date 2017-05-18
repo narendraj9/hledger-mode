@@ -552,8 +552,7 @@ three times."
   (let* ((reporting-date-an-year-ago (hledger-format-time (hledger-nth-of-mth-month
                                                            hledger-reporting-day
                                                            -12)))
-         (reporting-date-now (hledger-end-date (hledger-nth-of-this-month
-                                                hledger-reporting-day)))
+         (reporting-date-now (hledger-end-date (hledger-end-reporting-time)))
 
          (totals-plist-1 (hledger-compute-totals
                           (list hledger-ratios-assets-accounts
