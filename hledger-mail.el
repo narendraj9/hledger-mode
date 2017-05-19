@@ -287,13 +287,22 @@ inefficient."
 (defun hledger-mail-monthly-report ()
   "Email monthly report if not done already for the current month."
   (when (time-less-p hledger-email-next-reporting-time (current-time))
-    (hledger-mail-reports-run-async-task)))
+    (if (not (ignore-errors (hledger-mail-reports)))
+        (message "--> Hledger email reporting: Failed.")
+      (message "--> Mail reporting was successful.")
+      (setq hledger-email-next-reporting-time
+                 (hledger-compute-next-reporting-time))
+           (customize-save-variable 'hledger-email-next-reporting-time
+                                    (hledger-compute-next-reporting-time)))))
+
+(defun hledger-setup-mail-report-timer ()
+  "Setup a timer to send monthly report when idle."
+  (run-with-idle-timer 15 nil #'hledger-mail-monthly-report))
 
 ;;;###autoload
 (defun hledger-enable-reporting ()
   "Report every month on `hledger-reporting-day'."
-  (hledger-mail-monthly-report)
-  (add-hook 'hledger-mode-hook #'hledger-mail-monthly-report))
+  (add-hook 'hledger-mode-hook #'hledger-setup-mail-report-timer))
 
 (provide 'hledger-mail)
 ;;; hledger-mail.el ends here
