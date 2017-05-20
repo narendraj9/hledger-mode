@@ -201,24 +201,25 @@ with both Text and HTML parts as specified."
 Returns a cons cell with (text . html).
 This requires htmlize.el"
   (require 'htmlize)
-  (hledger-overall-report)
-  (deactivate-mark t)
-  (with-current-buffer hledger-reporting-buffer-name
-    ;; So that no line is highlighted. The buffer is in hledger-view-mode.
-    (hl-line-mode -1)
-    (let* ((text (buffer-substring-no-properties (point-min)
-                                                 (point-max)))
-           (htmlize-output-type 'inline-css)
-           (fontified-buffer  (htmlize-buffer))
-           (html (with-current-buffer fontified-buffer
-                   ;; Make sure that chrome uses a vertical scroll bar
-                   (goto-char (point-min))
-                   (search-forward "<pre")
-                   (insert " style=\"white-space: pre !important; word-wrap: normal !important; overflow-x: scroll;\"")
-                   (buffer-substring-no-properties (point-min)
-                                                   (point-max)))))
-      (kill-buffer fontified-buffer)
-      `(,text . ,html))))
+  (let ((hledger-reporting-buffer-name " *Hleder Email Reporting*"))
+    (hledger-overall-report)
+    (deactivate-mark t)
+    (with-current-buffer hledger-reporting-buffer-name
+      ;; So that no line is highlighted. The buffer is in hledger-view-mode.
+      (hl-line-mode -1)
+      (let* ((text (buffer-substring-no-properties (point-min)
+                                                   (point-max)))
+             (htmlize-output-type 'inline-css)
+             (fontified-buffer  (htmlize-buffer))
+             (html (with-current-buffer fontified-buffer
+                     ;; Make sure that chrome uses a vertical scroll bar
+                     (goto-char (point-min))
+                     (search-forward "<pre")
+                     (insert " style=\"white-space: pre !important; word-wrap: normal !important; overflow-x: scroll;\"")
+                     (buffer-substring-no-properties (point-min)
+                                                     (point-max)))))
+        (kill-buffer fontified-buffer)
+        `(,text . ,html)))))
 
 (defun hledger-mail-reports ()
   "Email reports to yourself every month.
