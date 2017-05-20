@@ -608,6 +608,7 @@ three times."
           'current-net-worth (- total-assets liabilities)           ;; Current net worth
           'efr (/ liquid-assets (* monthly-essential-expenses 1.0)) ;; Emergency-fund-ratio
           'tfr (/ liquid-assets (* monthly-total-expenses 1.0))     ;; Total-fund ratio | Similar to efr.
+          'br (/ total-assets monthly-total-expenses)               ;; Bankruptcy ratio
           'cr  (/ liquid-assets (* liabilities 1.0))                ;; Current ratio
           'sr  (/ monthly-savings monthly-income)                   ;; Savings ratio
           'dr (/ liabilities (* total-assets 1.0)))))               ;; Debt ratio
@@ -616,6 +617,7 @@ three times."
 (defun hledger-summarize-ratios (ratios)
   "Return a string summary of RATIOS."
   (let* ((tfr (plist-get ratios 'tfr))
+         (br (plist-get ratios 'br))
          (cr (plist-get ratios 'cr))
          (dr (plist-get ratios 'dr))
          (sr (plist-get ratios 'sr))
@@ -630,7 +632,8 @@ three times."
      (concat
       (make-string 80 ?═)
       "
- • Your liquid assets would last %s with this lifestyle.
+ • Your liquid assets would last %s and total assets %s
+   with this lifestyle.
  • Your liquid assets are %.2f times your liabilities/debt.
  • %.2f%% of your total assets are borrowed.
  • For the past one year, you have been saving %.2f%% of your average income.
@@ -641,6 +644,8 @@ three times."
      ;; @TODO: Show a message asking the user to customize 'hledger
      ;; group
      (or (ignore-errors (hledger-humanize-float-months tfr))
+         "nan")
+     (or (ignore-errors (hledger-humanize-float-months br))
          "nan")
      cr
      (* dr 100.0)
