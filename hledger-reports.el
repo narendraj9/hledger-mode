@@ -369,20 +369,21 @@ See `hledger-daily-report-accounts'."
   (with-current-buffer (hledger-get-perfin-buffer)
     (let ((reporting-since (hledger-compute-last-reporting-time))
           (beg-time-string (hledger-format-time (current-time)))
-          (end-time-string (hledger-end-date (current-time))))
+          (end-time-string (hledger-end-date (current-time)))
+          (hledger-underliner (make-string 20 ?═)))
       (hledger-jdo (format "balance %s --begin %s --end %s"
                            hledger-daily-report-accounts
                            beg-time-string
                            end-time-string))
       (goto-char (point-min))
       (insert (concat "Today you spent:\n"
-                      (make-string 20 ?=)
+                      hledger-underliner
                       "\n"))
       (goto-char (point-max))
       (insert (concat "\n\nSince "
                       (hledger-friendlier-time reporting-since)
                       "\n"
-                      (make-string 20 ?=)
+                      hledger-underliner
                       "\n"))
       (let ((beg-time-string (hledger-format-time ()))))
       (hledger-jdo (format "balance %s --begin %s --end %s --depth 2 --flat"
@@ -744,7 +745,7 @@ This is the reason dynamic scoping is cool sometimes."
          (header-title "Report : ")
          (header-filler (make-string (+ (length header-dates)
                                         (length header-title))
-                                     ?=)))
+                                     ?═)))
     (propertize (format "%s %s\n%s=\n\n"
                         header-title
                         header-dates

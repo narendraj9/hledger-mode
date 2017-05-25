@@ -46,6 +46,7 @@ A useful function for this would be `hledger-show-new-balances'.")
   (let ((map (copy-keymap hledger-mode-map)))
     (define-key map (kbd "C-c C-c") 'hledger-commit-input)
     (define-key map (kbd "C-c C-k") 'hledger-discard-input)
+    (define-key map (kbd "C-c e") 'hledger-discard-input-jentry)
     map)
   "Keymap for hledger input buffers.")
 
@@ -107,6 +108,12 @@ We are already in the input-buffer."
   (interactive)
   (kill-buffer)
   (delete-window))
+
+(defun hledger-discard-input-jentry ()
+  "Discard the current input buffer and do jentry."
+  (interactive)
+  (hledger-discard-input)
+  (hledger-jentry))
 
 (defun hledger-capture ()
   "Capture a journal entry quickly."
