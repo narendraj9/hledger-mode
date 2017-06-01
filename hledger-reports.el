@@ -615,6 +615,19 @@ three times."
           'dr (/ liabilities (* total-assets 1.0)))))               ;; Debt ratio
 
 
+(defun hledger-break-lines (s &optional separator width)
+  "Add newline characters to string S.
+Optional parameter WIDTH decides the maximum width of a line."
+  (let* ((width* (or width 80))
+         (init (seq-take s width*))
+         (end-index (string-match " [^ ]*$" init)))
+    (if (and end-index ;; It's not a single word.
+             (< width* (length s)))
+        (concat (seq-take s end-index)
+                (or separator "\n  ")
+                (hledger-break-lines (seq-drop s end-index)))
+      s)))
+
 (defun hledger-summarize-ratios (ratios)
   "Return a string summary of RATIOS."
   (let* ((tfr (plist-get ratios 'tfr))
@@ -628,36 +641,36 @@ three times."
              hledger-ratios-net-worth-in-next-x-years
              (plist-get ratios 'avg-monthly-savings)))
          (extrapolated-net-worth (+ cnw
-                                    extrapolated-savings)))
-    (format
-     (concat
-      (make-string 80 ?═)
-      "
- • Your liquid assets would last %s and total assets %s
-   with this lifestyle.
- • Your liquid assets are %.2f times your liabilities/debt.
- • %.2f%% of your total assets are borrowed.
- • For the past one year, you have been saving %.2f%% of your average income.
- • Your assets would roughly increase by %s %s in the next %s years
-   making your net worth %s %s.
-"
-      (make-string 80 ?═) "\n")
-     ;; @TODO: Show a message asking the user to customize 'hledger
-     ;; group
-     (or (ignore-errors (hledger-humanize-float-months tfr))
-         "nan")
-     (or (ignore-errors (hledger-humanize-float-months br))
-         "nan")
-     cr
-     (* dr 100.0)
-     (* sr 100.0)
-     hledger-currency-string
-     (or (ignore-errors (hledger-group-digits (truncate extrapolated-savings)))
-         "nan")
-     hledger-ratios-net-worth-in-next-x-years
-     hledger-currency-string
-     (or (ignore-errors (hledger-group-digits (truncate extrapolated-net-worth)))
-         "nan"))))
+                                    extrapolated-savings))
+         (summary-string
+          (format
+           (concat
+            (make-string 80 ?═)
+            "\b • Your liquid assets would last %s and total assets %s with this lifestyle. \b\
+ • Your liquid assets are %.2f times your liabilities/debt. \b\
+ • %.2f%% of your total assets are borrowed. \b\
+ • For the past one year, you have been saving %.2f%% of your average income. \b\
+ • Your assets would roughly increase by %s %s in the next %s years making your net worth %s %s. \b"
+            (make-string 80 ?═) "\n")
+           ;; @TODO: Show a message asking the user to customize 'hledger
+           ;; group
+           (or (ignore-errors (hledger-humanize-float-months tfr))
+               "nan")
+           (or (ignore-errors (hledger-humanize-float-months br))
+               "nan")
+           cr
+           (* dr 100.0)
+           (* sr 100.0)
+           hledger-currency-string
+           (or (ignore-errors (hledger-group-digits (truncate extrapolated-savings)))
+               "nan")
+           hledger-ratios-net-worth-in-next-x-years
+           hledger-currency-string
+           (or (ignore-errors (hledger-group-digits (truncate extrapolated-net-worth)))
+               "nan"))))
+    (mapconcat 'identity
+               (mapcar 'hledger-break-lines (split-string summary-string "\b"))
+               "\n")))
 
 (defun hledger-overall-report ()
   "A combination of all the relevant reports."
