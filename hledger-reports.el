@@ -64,6 +64,11 @@ I taint entries with a star, to declare that they haven't been effective yet."
   :group 'hledger
   :type 'boolean)
 
+(defcustom hledger-show-expanded-report t
+  "Show expanded account balances in running report."
+  :group 'hledger
+  :type 'boolean)
+
 (defcustom hledger-running-report-months
   5
   "Number of months to show in the running report."
@@ -472,17 +477,18 @@ isn't switched to."
                        (sort-numeric-fields -1 beg (point))
                        (reverse-region beg (point))))
       ;; Now adding the expanded Report with all accounts expanded.
-      (goto-char (point-max))
-      (insert "\nExpanded Running Report\n=======================\n\n")
-      (hledger-jdo (format "balance %s %s --tree -A -p %s"
-                           hledger-top-expense-account
-                           hledger-top-asset-account
-                           (shell-quote-argument (format "every %sth day of month from %s to %s"
-                                                         hledger-reporting-day
-                                                         beg-time-string
-                                                         end-time-string)))
-                   t
-                   bury-bufferp))))
+      (when hledger-show-expanded-report
+        (goto-char (point-max))
+        (insert "\nExpanded Running Report\n=======================\n\n")
+        (hledger-jdo (format "balance %s %s --tree -A -p %s"
+                             hledger-top-expense-account
+                             hledger-top-asset-account
+                             (shell-quote-argument (format "every %sth day of month from %s to %s"
+                                                           hledger-reporting-day
+                                                           beg-time-string
+                                                           end-time-string)))
+                     t
+                     bury-bufferp)))))
 
 
 (defun hledger-compute-last-reporting-time ()
