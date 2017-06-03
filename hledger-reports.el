@@ -135,6 +135,21 @@ I taint entries with a star, to declare that they haven't been effective yet."
   :group 'hledger
   :type 'number)
 
+(defcustom hledger-extrapolate-savings-rate
+  4.0
+  "Rate of compound interest (in %) with which to extrapolate savings.
+This is the annual rate of compound interest.  The bank may
+choose to do the componding quarterly.  Configure
+`hledger-extrapolate-savings-period' for that."
+  :group 'hledger
+  :type 'float)
+
+(defcustom hledger-extrapolate-savings-period
+  4
+  "Number of months at which the interest is compounded."
+  :group 'hledger
+  :type 'float)
+
 (defcustom hledger-width-spec
   '(100 . 40)
   "(# columns for the entry . # columns for description) for an entry."
@@ -634,6 +649,42 @@ Optional parameter WIDTH decides the maximum width of a line."
                 (hledger-break-lines (seq-drop s end-index)))
       s)))
 
+(defun hledger-compound-money (init periods periodic-rate)
+  "Compound INIT amount for PERIODS units at PERIODIC-RATE.
+
+PERIODIC-RATE is in % and hence must be divided by 100."
+  (* (or init 0)
+     (expt (+ 1 (/ periodic-rate 100.0)) periods)))
+
+(defun hledger-extrapolate-monthly-savings (monthly-savings
+                                            n
+                                            &optional initial-sum)
+  "Total savings with interest for MONTHLY-SAVINGS in N months.
+
+I live in India where bank do compounding quarterly with an
+interest rate of 4.0% per year.  Configure
+`hledger-extrapolate-savings-rate' and
+`hledger-extrapolate-savings-period' accordingly.
+
+Formula: Future value of an annuity = P ([(1 + r)^n - 1]/r).
+This assumes that the first payment comes at the end of first
+period.
+
+Optional argument INITIAL-SUM is the amount you have now.  You will
+earn interest on this amount as well."
+  (let* ((quarters (/ n 4.0))
+         (quarterly-rate% (/ hledger-extrapolate-savings-rate 4.0))
+         (quarterly-rate (/ quarterly-rate% 100.0))
+         (quarterly-savings (* monthly-savings 4.0)))
+    ;; Initial sum
+    (+ (hledger-compound-money initial-sum
+                               quarters
+                               quarterly-rate%)
+       ;; Future value of Annuity
+       (* quarterly-savings
+          (/ (- (expt (+ 1.0 quarterly-rate) quarters) 1.0)
+             quarterly-rate)))))
+
 (defun hledger-summarize-ratios (ratios)
   "Return a string summary of RATIOS."
   (let* ((tfr (plist-get ratios 'tfr))
@@ -642,12 +693,17 @@ Optional parameter WIDTH decides the maximum width of a line."
          (dr (plist-get ratios 'dr))
          (sr (plist-get ratios 'sr))
          (cnw (plist-get ratios 'current-net-worth))
+         (avg-monthly-savings (plist-get ratios 'avg-monthly-savings))
          (extrapolated-savings
           (* 12
              hledger-ratios-net-worth-in-next-x-years
-             (plist-get ratios 'avg-monthly-savings)))
+             avg-monthly-savings))
          (extrapolated-net-worth (+ cnw
                                     extrapolated-savings))
+         (extrapolated-net-worth-with-compounding
+          (hledger-extrapolate-monthly-savings avg-monthly-savings
+                                               (* 12 hledger-ratios-net-worth-in-next-x-years)
+                                               cnw))
          (summary-string
           (format
            (concat
@@ -656,7 +712,8 @@ Optional parameter WIDTH decides the maximum width of a line."
  • Your liquid assets are %.2f times your liabilities/debt. \b\
  • %.2f%% of your total assets are borrowed. \b\
  • For the past one year, you have been saving %.2f%% of your average income. \b\
- • Your assets would roughly increase by %s %s in the next %s years making your net worth %s %s. \b"
+ • Your assets would roughly increase by %s %s in the next %s years making your net worth %s %s.\
+ If compounded every %s months at %s%% per annum, your net worth would be to %s. \b"
             (make-string 80 ?═) "\n")
            ;; @TODO: Show a message asking the user to customize 'hledger
            ;; group
@@ -673,6 +730,13 @@ Optional parameter WIDTH decides the maximum width of a line."
            hledger-ratios-net-worth-in-next-x-years
            hledger-currency-string
            (or (ignore-errors (hledger-group-digits (truncate extrapolated-net-worth)))
+               "nan")
+           hledger-extrapolate-savings-period
+           hledger-extrapolate-savings-rate
+           (or (ignore-errors
+                 (hledger-group-digits
+                  (truncate
+                   extrapolated-net-worth-with-compounding)))
                "nan"))))
     (mapconcat 'identity
                (mapcar 'hledger-break-lines (split-string summary-string "\b"))
