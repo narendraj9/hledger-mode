@@ -713,7 +713,7 @@ earn interest on this amount as well."
  • %.2f%% of your total assets are borrowed. \b\
  • For the past one year, you have been saving %.2f%% of your average income. \b\
  • Your assets would roughly increase by %s %s in the next %s years making your net worth %s %s.\
- If compounded every %s months at %s%% per annum, your net worth would be to %s. \b"
+ If compounded every %s months at %s%% per annum, your net worth would become %s %s. \b"
             (make-string 80 ?═) "\n")
            ;; @TODO: Show a message asking the user to customize 'hledger
            ;; group
@@ -733,6 +733,7 @@ earn interest on this amount as well."
                "nan")
            hledger-extrapolate-savings-period
            hledger-extrapolate-savings-rate
+           hledger-currency-string
            (or (ignore-errors
                  (hledger-group-digits
                   (truncate
