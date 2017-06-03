@@ -319,19 +319,25 @@ looks ugly when it's small."
          (days (truncate (* 30 decimal-part))))
     (if (= years days months 0)
         "0 days"
-      (concat (if (< 0 years) (format "%d year%s "
-                                      years
-                                      (if (< 1 years) "s" ""))
-                "")
-              (if (< 0 months) (format "%d month%s "
-                                       months
-                                       (if (< 1 months) "s" ""))
-                "")
-              (if (or (< 0 years) (< 0 months)) "and " "")
-              (if (< 0 days) (format "%d day%s"
-                                     days
-                                     (if (< 1 days) "s" ""))
-                "")))))
+      (mapconcat 'identity
+                 (seq-filter
+                  (lambda (s) (not (equal s "")))
+                  (list (if (< 0 years) (format "%d year%s"
+                                                years
+                                                (if (< 1 years) "s" ""))
+                          "")
+                        (if (< 0 months) (format "%d month%s"
+                                                 months
+                                                 (if (< 1 months) "s" ""))
+                          "")
+                        (if (< 0 days) (format "%s %d day%s"
+                                               (if (or (< 0 years) (< 0 months))
+                                                   "and"
+                                                 "")
+                                               days
+                                               (if (< 1 days) "s" ""))
+                          "")))
+                 " "))))
 
 (defun hledger-completion-at-point ()
   "Adding this for account name completions in `minibuffer'."
