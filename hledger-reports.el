@@ -405,12 +405,17 @@ See `hledger-daily-report-accounts'."
                       "\n"
                       hledger-underliner
                       "\n"))
-      (let ((beg-time-string (hledger-format-time ()))))
-      (hledger-jdo (format "balance %s --begin %s --end %s --depth 2 --flat"
-                           hledger-daily-report-accounts
-                           (hledger-format-time reporting-since)
-                           (hledger-end-date (current-time)))
-                   t)
+      (let ((beg (point)))
+        (hledger-jdo (format "balance %s --begin %s --end %s --depth 2 --flat"
+                             hledger-daily-report-accounts
+                             (hledger-format-time reporting-since)
+                             (hledger-end-date (current-time)))
+                     t)
+        (goto-char (point-max))
+        (forward-line -3)
+        (end-of-line)
+        (sort-numeric-fields 2 beg (point))
+        (reverse-region beg (point)))
       (goto-char (point-min)))))
 
 (defun hledger-monthly-incomestatement (&optional hide-header-p)
