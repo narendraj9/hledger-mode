@@ -470,7 +470,7 @@ isn't switched to."
   (interactive)
   (let* ((beg-time-string (hledger-format-time (hledger-nth-of-mth-month
                                                 hledger-reporting-day
-                                                (- (1- hledger-running-report-months)))))
+                                                (- hledger-running-report-months))))
          (end-time-string (hledger-format-time (hledger-end-reporting-time))))
     (hledger-jdo (format "balance %s %s --depth 2 -A -p %s"
                          hledger-top-expense-account
