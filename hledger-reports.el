@@ -111,17 +111,23 @@ I taint entries with a star, to declare that they haven't been effective yet."
   :group 'hledger
   :type 'string)
 
-(defcustom hledger-report-header-face
-  '(:foreground "Cornsilk" :height 1.1)
+(defface hledger-report-header-face
+  '((((class color) (background dark))
+     :foreground "Cornsilk" :height 1.1)
+    (((class color) (background light))
+     :foreground "Black" :height 1.1)
+    (t :inverse-video t))
   "Face for the header with date ranges in the the reports."
-  :group 'hledger
-  :type 'face)
+  :group 'hledger)
 
-(defcustom hledger-overall-report-summary-text-face
-  '(:foreground "Cornsilk" :height 1.0)
+(defface hledger-overall-report-summary-text-face
+  '((((class color) (background dark))
+     :foreground "Cornsilk" :height 1.0)
+    (((class color) (background light))
+     :foreground "Black" :height 1.0)
+    (t :inverse-video t))
   "Face for the summary text in overall report."
-  :group 'hledger
-  :type 'face)
+  :group 'hledger)
 
 (defcustom hledger-account-balance-expand-face
   '(:foreground "Cornsilk" :background "DarkSlateGray")
@@ -793,7 +799,7 @@ earn interest on this amount as well."
                         hledger-currency-string current-net-worth
                         (propertize summary
                                     'font-lock-face
-                                    hledger-overall-report-summary-text-face))))
+                                    'hledger-overall-report-summary-text-face))))
       (goto-char (point-min))
       (message "Done!"))))
 
@@ -839,7 +845,7 @@ This is the reason dynamic scoping is cool sometimes."
                         header-title
                         header-dates
                         header-filler)
-                'font-lock-face hledger-report-header-face)))
+                'font-lock-face 'hledger-report-header-face)))
 
 (defun hledger-expand-account ()
   "Expands account for the month according to `hledger-last-run-time'."
