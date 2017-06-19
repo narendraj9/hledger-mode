@@ -474,9 +474,14 @@ old contents are kept intact.
 Optional argument BURY-BUFFERP if non-nil, the reporting buffer
 isn't switched to."
   (interactive)
-  (let* ((beg-time-string (hledger-format-time (hledger-nth-of-mth-month
-                                                hledger-reporting-day
-                                                (- hledger-running-report-months))))
+  (let* ((beg-time-string
+          (hledger-format-time (hledger-nth-of-mth-month
+                                hledger-reporting-day
+                                (if (< (nth 3
+                                            (decode-time (current-time)))
+                                       hledger-reporting-day)
+                                    (- hledger-running-report-months)
+                                  (- 1 hledger-running-report-months)))))
          (end-time-string (hledger-format-time (hledger-end-reporting-time))))
     (hledger-jdo (format "balance %s %s --depth 2 -A -p %s"
                          hledger-top-expense-account
