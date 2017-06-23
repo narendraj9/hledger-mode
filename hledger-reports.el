@@ -534,14 +534,8 @@ isn't switched to."
   "Computes the total for given accounts in ACCOUNTS-STRING.
 This function depends upon how `hledger-bin' prints data to the console.
 If that changes, things will break.  BEG and END are dates."
-  (let* ((date-now (hledger-end-date (current-time)))
-         (output (hledger-shell-command-to-string
-                  (concat " balance "
-                          accounts-string
-                          (if beg (concat " --begin " beg) "")
-                          " --end " (or end date-now)
-                          " --depth 1"))))
-    (string-to-number (nth 1 (split-string output)))))
+  (lax-plist-get (hledger-compute-totals (list accounts-string) beg end)
+                 accounts-string))
 
 (defun hledger-compute-totals (accounts-list &optional beg end)
   "Computes the total for a list of accounts in ACCOUNTS-LIST.
