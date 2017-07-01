@@ -220,11 +220,22 @@ time."
       (hledger-nth-of-this-month hledger-reporting-day))))
 
 (defun hledger-shell-command-to-string (command-string)
-  "Return the result of running COMMAND-STRING has an hledger command."
-  (shell-command-to-string (concat "hledger -f "
-                                   (shell-quote-argument hledger-jfile)
-                                   " "
-                                   command-string)))
+  "Return the result of running COMMAND-STRING has an hledger command.
+
+If the command failed, returns a cons with the error status and
+the output to `standard-error' and `standard-output'."
+  (with-temp-buffer
+    (let ((status (call-process "hledger"
+                                nil
+                                t
+                                nil
+                                "-f"
+                                (shell-quote-argument hledger-jfile)
+                                command-string)))
+      (if (= status 0)
+          (buffer-string)
+        ;; Error code and the error message
+        (cons status (buffer-string))))))
 
 (defun hledger-ask-and-save-buffer ()
   "Ask for saving modified buffer before any reporting commands."

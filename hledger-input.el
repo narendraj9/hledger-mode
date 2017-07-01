@@ -84,6 +84,23 @@ This setups up the minor mode and narrowing in the input buffer."
                              (make-string 20 ?―))))
     (display-message-or-buffer report-str)))
 
+(defun hledger-input-valid-p (input-entry)
+  "Check the validity of balances in INPUT-ENTRY."
+  (let* ((temp-file-path (make-temp-file "hledger-input"))
+         (hledger-jfile temp-file-path))
+    (with-temp-file temp-file-path
+      (insert input-entry)
+      (insert "\n"))
+
+    (let ((result (hledger-shell-command-to-string "balance")))
+      (if (not (consp result))
+          t
+        (message "Error: \n%s\n%s\n%s"
+                 (make-string fill-column ?-)
+                 (cdr result)
+                 (make-string fill-column ?-))
+        nil))))
+
 (defun hledger-commit-input ()
   "Commit INPUT-BUFFER contents to `hledger-jfile'.
 We are already in the input-buffer."
@@ -91,17 +108,17 @@ We are already in the input-buffer."
   (run-hooks 'hledger-input-pre-commit-hook)
   (let ((new-input (buffer-substring (point-min)
                                      (point-max))))
-    (whitespace-cleanup)
-    (with-current-buffer (find-file-noselect hledger-jfile)
-      (hledger-go-to-starting-line)
-      (insert new-input)
-      (save-buffer)
-      (kill-buffer)))
-  (message "Saved input to journal file")
-  (run-hooks 'hledger-input-post-commit-hook)
-  (kill-buffer)
-  ;; Delete the window if it's not the sole window.
-  (ignore-errors (delete-window)))
+    (when (hledger-input-valid-p new-input)
+      (with-current-buffer (find-file-noselect hledger-jfile)
+        (hledger-go-to-starting-line)
+        (insert new-input)
+        (save-buffer)
+        (kill-buffer))
+      (message "Saved input to journal file")
+      (run-hooks 'hledger-input-post-commit-hook)
+      (kill-buffer)
+      ;; Delete the window if it's not the sole window.
+      (ignore-errors (delete-window)))))
 
 (defun hledger-discard-input ()
   "Discard entry in input-buffer and go back to previous window configuration."
