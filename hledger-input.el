@@ -92,7 +92,7 @@ This setups up the minor mode and narrowing in the input buffer."
       (insert input-entry)
       (insert "\n"))
 
-    (let ((result (hledger-shell-command-to-string "balance")))
+    (let ((result (hledger-status "balance")))
       (if (not (consp result))
           t
         (message "Error: \n%s\n%s\n%s"

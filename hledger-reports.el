@@ -219,7 +219,7 @@ time."
         (hledger-nth-of-mth-month hledger-reporting-day 1)
       (hledger-nth-of-this-month hledger-reporting-day))))
 
-(defun hledger-shell-command-to-string (command-string)
+(defun hledger-status (command-string)
   "Return the result of running COMMAND-STRING has an hledger command.
 
 If the command failed, returns a cons with the error status and
@@ -236,6 +236,10 @@ the output to `standard-error' and `standard-output'."
           (buffer-string)
         ;; Error code and the error message
         (cons status (buffer-string))))))
+
+(defun hledger-shell-command-to-string (command-string)
+  "Return result of running hledger command COMMAND-STRING."
+  (shell-command-to-string (concat "hledger -f " hledger-jfile command-string)))
 
 (defun hledger-ask-and-save-buffer ()
   "Ask for saving modified buffer before any reporting commands."
