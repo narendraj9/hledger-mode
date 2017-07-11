@@ -239,7 +239,8 @@ the output to `standard-error' and `standard-output'."
 
 (defun hledger-shell-command-to-string (command-string)
   "Return result of running hledger command COMMAND-STRING."
-  (shell-command-to-string (concat "hledger -f " hledger-jfile command-string)))
+  (shell-command-to-string (concat "hledger -f " hledger-jfile " "
+                                   command-string)))
 
 (defun hledger-ask-and-save-buffer ()
   "Ask for saving modified buffer before any reporting commands."
