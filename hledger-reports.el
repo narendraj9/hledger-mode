@@ -300,12 +300,14 @@ non-nil, it lands us in the `hledger-mode' ."
                                     (point-max)
                                     'next-error))
 
-(defun hledger-get-accounts ()
-  "Return list of account names."
+(defun hledger-get-accounts (&optional string)
+  "Return list of account names with STRING infix present.
+STRING can be multiple words separated by a space."
   (let* ((accounts-string (shell-command-to-string
                            (concat "hledger -f"
                                    hledger-jfile
-                                   " accounts")))
+                                   " accounts "
+                                   (or string ""))))
          (accounts-list (split-string accounts-string)))
     accounts-list))
 
