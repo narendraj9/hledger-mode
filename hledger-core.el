@@ -24,7 +24,7 @@
 
 ;;; Code:
 
-(defcustom hledger-jfile "~/miscellany/personal/finance/accounting.journal"
+(defcustom hledger-jfile "~/.hledger.journal"
   "Location of the journal file."
   :group 'hledger
   :type 'file)
