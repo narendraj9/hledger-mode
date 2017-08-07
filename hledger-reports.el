@@ -612,10 +612,6 @@ three times."
                           reporting-date-now))
 
          ;; For average balances
-         (total-assets-accumulated-this-year
-          (or (lax-plist-get totals-plist-1
-                             (hledger-get-top-level-acount hledger-ratios-assets-accounts))
-              0))
          (total-income-accumulated-this-year
           (or (lax-plist-get totals-plist-1
                              (hledger-get-top-level-acount hledger-ratios-income-accounts))
@@ -647,7 +643,7 @@ three times."
          (monthly-total-expenses (/ total-expenses 12.0))
          (monthly-essential-expenses (/ total-essential-expenses-this-year 12.0))
          (monthly-income (/ total-income-accumulated-this-year 12.0))
-         (monthly-savings (/ total-assets-accumulated-this-year 12.0)))
+         (monthly-savings (- monthly-income monthly-total-expenses)))
     (list 'avg-income (* monthly-income 1.0)                        ;; Monthly income
           'liquid-assets liquid-assets                              ;; Liquid\
           'total-assets total-assets                                ;; Total /  Assets
