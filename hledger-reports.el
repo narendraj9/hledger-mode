@@ -438,8 +438,9 @@ See `hledger-daily-report-accounts'."
         (goto-char (point-max))
         (forward-line -3)
         (end-of-line)
-        (sort-numeric-fields 2 beg (point))
-        (reverse-region beg (point)))
+        (ignore-errors
+          (sort-numeric-fields 2 beg (point))
+          (reverse-region beg (point))))
       (goto-char (point-min)))))
 
 (defun hledger-monthly-incomestatement (&optional hide-header-p)
