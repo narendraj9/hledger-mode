@@ -286,7 +286,7 @@ Optional argument SEP-REGEXP is the regular expression that separates things."
 (defun hledger-op-on-amount (op)
   "Apply operation OP on the previous amount in sight."
   (save-excursion
-    (if (search-forward-regexp hledger-amount-value-regex nil t)
+    (if (search-forward-regexp hledger-amount-regex nil t)
         (let* ((amount-bounds (bounds-of-thing-at-point 'hledger-amount))
                (amount (string-to-number (thing-at-point 'hledger-amount)))
                (beg (car amount-bounds))
