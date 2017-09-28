@@ -330,9 +330,9 @@ looks ugly when it's small."
                                                  months
                                                  (if (< 1 months) "s" ""))
                           "")
-                        (if (< 0 days) (format "%s %d day%s"
+                        (if (< 0 days) (format "%s%d day%s"
                                                (if (or (< 0 years) (< 0 months))
-                                                   "and"
+                                                   "and "
                                                  "")
                                                days
                                                (if (< 1 days) "s" ""))
