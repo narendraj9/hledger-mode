@@ -66,6 +66,7 @@
     (candidates . hledger-accounts-cache))
   "A source for completing account names in a hledger buffer.")
 
+;;;###autoload
 (defun hledger-company (command &optional arg &rest ignored)
   "Company backend for ‘hledger-mode’.
 COMMAND, ARG and IGNORED the regular meanings."
