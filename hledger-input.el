@@ -83,7 +83,8 @@ This setups up the minor mode and narrowing in the input buffer."
                              (make-string 20 ?―)
                              report-str*
                              (make-string 20 ?―))))
-    (display-message-or-buffer report-str)))
+    (display-message-or-buffer report-str)
+    nil))
 
 (defun hledger-input-valid-p (input-entry)
   "Check the validity of balances in INPUT-ENTRY."
