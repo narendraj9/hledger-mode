@@ -76,6 +76,7 @@ This setups up the minor mode and narrowing in the input buffer."
 (defun hledger-show-new-balances ()
   "Show balances new balances for the accounts in buffer."
   (let* ((inhibit-read-only t)
+         (message-log-max nil)
          (accounts (hledger-get-accounts-in-buffer))
          (report-str* (hledger-get-balances accounts))
          (report-str (format "%s\n\n%s\n%s"
