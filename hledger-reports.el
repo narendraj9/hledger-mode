@@ -553,8 +553,9 @@ isn't switched to."
   "Computes the total for given accounts in ACCOUNTS-STRING.
 This function depends upon how `hledger-bin' prints data to the console.
 If that changes, things will break.  BEG and END are dates."
-  (lax-plist-get (hledger-compute-totals (list accounts-string) beg end)
-                 accounts-string))
+  (or (lax-plist-get (hledger-compute-totals (list accounts-string) beg end)
+                     accounts-string)
+      0))
 
 (defun hledger-compute-totals (accounts-list &optional beg end)
   "Computes the total for a list of accounts in ACCOUNTS-LIST.
