@@ -95,6 +95,7 @@ This setups up the minor mode and narrowing in the input buffer."
       (insert "\n"))
 
     (let ((result (hledger-status "balance")))
+      (delete-file temp-file-path)
       (if (not (consp result))
           t
         (message "Error: \n%s\n%s\n%s"
