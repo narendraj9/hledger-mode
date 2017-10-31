@@ -43,6 +43,11 @@
                                  "register")
   "Commands that can be passed to `hledger-jdo` function defined below.")
 
+(defcustom hledger-extra-args " "
+  "Extra arguments included while running Hledger for reports, e.g. -S."
+  :group 'hledger
+  :type 'string)
+
 (defcustom hledger-top-asset-account "assets"
   "Top level assets acccount."
   :group 'hledger
@@ -340,7 +345,8 @@ easily."
         (jcommand (concat "hledger -f "
                           (shell-quote-argument hledger-jfile)
                           " "
-                          command)))
+                          command
+                          hledger-extra-args)))
     (with-current-buffer jbuffer
       (let ((here (point)))
         (call-process-shell-command jcommand nil t nil)
