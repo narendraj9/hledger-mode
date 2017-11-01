@@ -851,7 +851,6 @@ earn interest on this amount as well."
    ──────────────────────────────────────────────────────────────────
    Liquid Assets: %s %-23.2fTotal Assets: %s %.2f
    Liabilities: %s %-25.2fNet Worth: %s %.2f
-
    ──────────────────────────────────────────────────────────────────
    Years to retirement: %-19.0fRetiring at: %.0f
    Age:%-36.0fLife Expectancy: %.0f
