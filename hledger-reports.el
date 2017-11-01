@@ -63,6 +63,17 @@
   :group 'hledger
   :type 'string)
 
+(defcustom hledger-year-of-birth 1992
+  "Year in which you were born.
+Required for calculating your age."
+  :group 'hledger
+  :type 'number)
+
+(defcustom hledger-life-expectancy 80
+  "Age upto which you expect to live."
+  :group 'hledger
+  :type 'number)
+
 (defcustom hledger-show-only-unstarred-p t
   "Show only the un-tainted entries.
 I taint entries with a star, to declare that they haven't been effective yet."
@@ -587,6 +598,28 @@ Optional argument END end date string for journal entries to consider."
          (result (car (read-from-string elisp-string))))
     result))
 
+(defun hledger-compute-years-to-retirement* (spending-ratio)
+  "Given SPENDING-RATIO, find number of years to retirement.
+Configure `hledger-life-expectany' and `hledger-year-of-birth'.
+
+SPENDING-RATIO = 1 - savings-ratio
+
+The assumption is that you are going to keep spending the same
+fraction of your income even after you retire.  This function
+doesn't take into account the current savings that you have
+accumulated so far."
+  (let* ((this-year (nth 5 (decode-time (current-time))))
+         (age (- this-year hledger-year-of-birth)))
+    ;; It's amazing how simple this equation is. It's like with my spending
+    ;; ratio, I am spending the rest of my days.
+    (* spending-ratio (- hledger-life-expectancy age))))
+
+(defun hledger-compute-years-to-retirement (savings monthly-expenses savings-ratio)
+  "Compute years to retirement with SAVINGS, MONTHLY-EXPENSES and SAVINGS-RATIO."
+  (- (hledger-compute-years-to-retirement* (- 1 savings-ratio))
+     ;; Buying some years of my life with current savings
+     (/ savings monthly-expenses 12.0)))
+
 (defun hledger-generate-ratios ()
   "Computes various personal finance ratios:
 
@@ -651,7 +684,13 @@ three times."
          (monthly-total-expenses (/ total-expenses 12.0))
          (monthly-essential-expenses (/ total-essential-expenses-this-year 12.0))
          (monthly-income (/ total-income-accumulated-this-year 12.0))
-         (monthly-savings (- monthly-income monthly-total-expenses)))
+         (monthly-savings (- monthly-income monthly-total-expenses))
+
+         (savings-ratio (/ monthly-savings monthly-income))
+         (current-net-worth (- total-assets liabilities))
+         (years-to-retirement (hledger-compute-years-to-retirement current-net-worth
+                                                                   monthly-total-expenses
+                                                                   savings-ratio)))
     (list 'avg-income (* monthly-income 1.0)                        ;; Monthly income
           'liquid-assets liquid-assets                              ;; Liquid\
           'total-assets total-assets                                ;; Total /  Assets
@@ -659,14 +698,14 @@ three times."
           'avg-expenses (* monthly-total-expenses 1.0)              ;; Average expenses
           'avg-monthly-savings monthly-savings                      ;; Average monthly savings
           'total-assets total-assets                                ;; Total assets as of now
-          'current-net-worth (- total-assets liabilities)           ;; Current net worth
+          'current-net-worth current-net-worth                      ;; Current net worth
           'efr (/ liquid-assets (* monthly-essential-expenses 1.0)) ;; Emergency-fund-ratio
           'tfr (/ liquid-assets (* monthly-total-expenses 1.0))     ;; Total-fund ratio | Similar to efr.
           'br (/ total-assets monthly-total-expenses)               ;; Bankruptcy ratio
           'cr  (/ liquid-assets (* liabilities 1.0))                ;; Current ratio
-          'sr  (/ monthly-savings monthly-income)                   ;; Savings ratio
+          'sr  savings-ratio                                        ;; Savings ratio
+          'ytr years-to-retirement                                  ;; Years I will have to keep working for
           'dr (/ liabilities (* total-assets 1.0)))))               ;; Debt ratio
-
 
 (defun hledger-break-lines (s &optional separator width)
   "Add newline characters to string S.
@@ -788,6 +827,12 @@ earn interest on this amount as well."
              (cr (plist-get ratios 'cr))
              (dr (plist-get ratios 'dr))
              (sr (plist-get ratios 'sr))
+
+             (this-year (nth 5 (decode-time (current-time))))
+             (age (- this-year hledger-year-of-birth))
+             (ytr (plist-get ratios 'ytr))
+             (retiring-at (+ age ytr))
+
              (avg-income (plist-get ratios 'avg-income))
              (avg-expenses (plist-get ratios 'avg-expenses))
              (liquid-assets (plist-get ratios 'liquid-assets))
@@ -807,6 +852,10 @@ earn interest on this amount as well."
    Liquid Assets: %s %-23.2fTotal Assets: %s %.2f
    Liabilities: %s %-25.2fNet Worth: %s %.2f
 
+   ──────────────────────────────────────────────────────────────────
+   Years to retirement: %-19.0fRetiring at: %.0f
+   Age:%-36.0fLife Expectancy: %.0f
+
 ╚══════════════════════════════════════╩══════════════════════════════════════════╝
 
 %s
@@ -818,6 +867,10 @@ earn interest on this amount as well."
                         hledger-currency-string total-assets
                         hledger-currency-string liabilities
                         hledger-currency-string current-net-worth
+                        ytr
+                        retiring-at
+                        age
+                        hledger-life-expectancy
                         (propertize summary
                                     'font-lock-face
                                     'hledger-overall-report-summary-text-face))))
