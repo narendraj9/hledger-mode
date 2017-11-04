@@ -4,7 +4,7 @@
 
 A mode for writing hledger journals with a set of useful reports.
 
-![Sample Reports](_assets/sample_reports.gif?raw=true "Reports")
+![Sample Reports](_assets/new_demo.gif?raw=true "Reports")
 
 ## Installation
 
