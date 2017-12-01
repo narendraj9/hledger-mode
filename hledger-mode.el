@@ -81,6 +81,7 @@ COMMAND, ARG and IGNORED the regular meanings."
                      (and (string-prefix-p arg c) c))
                    hledger-accounts-cache)))))
 
+;;;###autoload
 (defvar hledger-mode-map
   (let ((map (make-keymap)))
     (define-key map (kbd "C-c C-i") 'hledger-append-clipboard-to-journal)
