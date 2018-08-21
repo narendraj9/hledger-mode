@@ -121,15 +121,16 @@ COMMAND, ARG and IGNORED the regular meanings."
     (define-key map (kbd "%") 'hledger-display-percentages)
     map))
 
-(defconst hledger-font-lock-keywords-1
+(defun hledger-font-lock-keywords-1 ()
+  "Minimal highlighting expressions for hledger mode."
   (list
    `(,hledger-account-regex . hledger-account-face)
    `(,hledger-date-regex . hledger-date-face)
-   `(,hledger-amount-regex . hledger-amount-face))
-  "Minimal highlighting expressions for hledger mode.")
+   `(,(hledger-amount-regex) . hledger-amount-face)))
 
-(defvar hledger-font-lock-defaults '(hledger-font-lock-keywords-1)
-  "Default highlighting expressions for hledger mode.")
+(defun hledger-font-lock-defaults ()
+  "Default highlighting expressions for hledger mode."
+  (list (hledger-font-lock-keywords-1)))
 
 (defvar hledger-mode-syntax-table (let ((st (make-syntax-table)))
                                     (modify-syntax-entry ?: "_" st)
@@ -140,7 +141,7 @@ COMMAND, ARG and IGNORED the regular meanings."
 
 (defun hledger-mode-init ()
   "Function that does initial setup in the \"major-mode\" function."
-  (setq font-lock-defaults hledger-font-lock-defaults)
+  (setq font-lock-defaults (hledger-font-lock-defaults))
   (setq-local indent-line-function 'hledger-indent-line)
   (setq-local indent-region-function 'hledger-indent-region-function)
   (setq-local comment-start "; ")
@@ -167,7 +168,7 @@ so that the key bindings are not shared between buffers that are used for
 viewing reports and the journal file. I require the same kind of syntax
 highlighting in both kinds of buffers."
   :syntax-table hledger-mode-syntax-table
-  (setq font-lock-defaults hledger-font-lock-defaults)
+  (setq font-lock-defaults (hledger-font-lock-defaults))
   ;; Populate accounts cache if not already.
   (or hledger-accounts-cache
       (setq hledger-accounts-cache (hledger-get-accounts)))

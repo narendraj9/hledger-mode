@@ -70,6 +70,14 @@
                                                 hledger-amount-regex)
   "Regular expression for whitespace followed by amount.")
 
+(defun hledger-amount-regex ()
+  "Regular expression to match an inserted amount in rupees."
+  (format "\\<%s\\s-*[-]?[0-9]+\\(\\.[0-9]+\\)?\\>" hledger-currency-string))
+
+(defun hledger-whitespace-amount-regex ()
+  "Regular expression for whitespace followed by amount."
+  (format "\\s-*%s" hledger-amount-regex))
+
 ;;; Indentation
 (defun hledger-line-matchesp (re offset)
   "Check if regex RE will match the beginning for line current-line - OFFSET."
