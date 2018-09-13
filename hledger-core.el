@@ -53,8 +53,14 @@
   "Regular expression for dates for font lock.")
 (defvar hledger-date-and-desc-regex (format "\\<%s\\s-*\\*?\\s-*[^[:space:]]+\\>" hledger-date-regex)
   "Regular expression for matching a starting entry with some description.")
-(defvar hledger-account-regex "\\(\\([Rr]evenues\\|[aA]ssets\\|[lL]iabilities\\|[Ee]quity\\|[Ee]xpenses\\|[iI]ncome\\|[Zz]adjustments\\)\\(:[A-Za-z--]+\\)+\\)"
-  "Regular expression for a potential journal account.")
+
+(defvar hledger-account-regex nil "Regular expression for a potential journal account.")
+(setq hledger-account-regex
+      (concat "\\(\\([Rr]evenues\\|[aA]ssets\\|[lL]iabilities"
+	      "\\|[Ee]quity\\|[Ee]xpenses\\|[iI]ncome\\|[Zz]adjustments\\)" ;; terms all accounts must start with
+	      "\\(:[A-Za-z0-9\-]+\\( [A-Za-z0-9\-]+\\)*\\)+\\)"             ;; allow multi-word account names
+	      ))
+
 (defvar hledger-whitespace-account-regex (format "\\s-*%s" hledger-account-regex)
   "Regular expression for an account with leading whitespace.")
 (defvar hledger-comment-regex "^[ \t]*;"
@@ -211,6 +217,36 @@ interactively editing an entry."
        ((hledger-cur-starts-with-semicolp) (indent-line-to hledger-comments-column))
        ((hledger-cur-has-accp) (indent-line-to tab-width)))
       (forward-line 1))))
+
+;; Tests for account name matching.
+;; Run with `M-x ert-run-tests-interactively`
+(defun act-name-first-match (nme)
+  (string-match hledger-account-regex nme)
+  (match-string 0 nme))
+
+(ert-deftest ert-test-correct-account-no-spaces ()
+  "Account name regex matches account name with no spaces"
+  (should (equal (act-name-first-match "Revenues:Income") "Revenues:Income")))
+
+(ert-deftest ert-test-account-name-with-space ()
+  "Account name regex matches account name with a space"
+  (should (equal (act-name-first-match "Revenues:Consulting Income") "Revenues:Consulting Income")))
+
+(ert-deftest ert-test-account-name-doesnt-include-amount ()
+  "Account name regex match does not include amount"
+  (should (equal (act-name-first-match "Revenues:Consulting Income $42.00") "Revenues:Consulting Income")))
+
+(ert-deftest ert-test-account-name-doesnt-match-if-starting-whitelist-not-matched ()
+  "Account name regex match doesn't match if it does not start with a whitelisted word"
+  (should (equal (string-match hledger-account-regex "BogusType:Banking") nil)))
+
+(ert-deftest ert-test-account-name-matches-with-digit ()
+  "Account name regex matches account name containing digit"
+  (should (equal (act-name-first-match "Revenues:Consulting Income 9") "Revenues:Consulting Income 9")))
+
+(ert-deftest ert-test-account-name-nested ()
+  "Account name may be nested more than one level"
+  (should (equal (act-name-first-match "Revenues:Consulting Income:Haskell") "Revenues:Consulting Income:Haskell")))
 
 (provide 'hledger-core)
 ;;; hledger-core.el ends here
