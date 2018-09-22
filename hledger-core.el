@@ -42,7 +42,7 @@
 (defcustom hledger-currency-string "₹"
   "String to be used for currency.  Assumes it is prefixed."
   :group 'hledger
-  :type 'integer)
+  :type 'string)
 
 ;;; Regexes
 (defvar hledger-empty-regex "^\\s-*$"
@@ -69,20 +69,15 @@
   "Regular expression to match a comment with no text.")
 (defvar hledger-amount-value-regex "[-]?[0-9]+\\(\\.[0-9]+\\)?"
   "Regular expression to match a floating point number.")
-(defvar hledger-amount-regex (format "\\<%s\\s-*[-]?[0-9]+\\(\\.[0-9]+\\)?\\>"
-                                     hledger-currency-string)
-  "Regular expression to match an inserted amount in rupees.")
-(defvar hledger-whitespace-amount-regex (format "\\s-*%s"
-                                                hledger-amount-regex)
-  "Regular expression for whitespace followed by amount.")
 
 (defun hledger-amount-regex ()
   "Regular expression to match an inserted amount in rupees."
-  (format "\\<%s\\s-*[-]?[0-9]+\\(\\.[0-9]+\\)?\\>" hledger-currency-string))
+  (format "\\<%s\\s-*[-]?[0-9,]+\\(\\.[0-9]+\\)?\\>" hledger-currency-string))
 
 (defun hledger-whitespace-amount-regex ()
   "Regular expression for whitespace followed by amount."
-  (format "\\s-*%s" hledger-amount-regex))
+  (format "\\s-*%s" (format "\\<%s\\s-*[-]?[0-9]+\\(\\.[0-9]+\\)?\\>"
+                                     hledger-currency-string)))
 
 ;;; Indentation
 (defun hledger-line-matchesp (re offset)

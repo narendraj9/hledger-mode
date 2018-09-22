@@ -4,6 +4,10 @@
   (string-match hledger-account-regex nme)
   (match-string 0 nme))
 
+(defun first-amount-match (nme)
+  (string-match (hledger-amount-regex) nme)
+  (match-string 0 nme))
+
 (ert-deftest ert-test-correct-account-no-spaces ()
   "Account name regex matches account name with no spaces"
   (should (equal (act-name-first-match "Revenues:Income") "Revenues:Income")))
@@ -27,3 +31,14 @@
 (ert-deftest ert-test-account-name-nested ()
   "Account name may be nested more than one level"
   (should (equal (act-name-first-match "Revenues:Consulting Income:Haskell") "Revenues:Consulting Income:Haskell")))
+
+
+(setq hledger-currency-string "$")
+
+(ert-deftest ert-test-amount-with-different-currency-string ()
+  "Test matching an amount after changing the currency string to dollars"
+  (should (equal (first-amount-match "$400.00") "$400.00")))
+
+(ert-deftest ert-test-amount-with-comma ()
+  "Test amount matching containing a comma"
+  (should (equal (first-amount-match "$4,000.00") "$4,000.00")))
