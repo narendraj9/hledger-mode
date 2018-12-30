@@ -42,7 +42,7 @@
 (defcustom hledger-currency-string "₹"
   "String to be used for currency.  Assumes it is prefixed."
   :group 'hledger
-  :type 'integer)
+  :type 'string)
 
 ;;; Regexes
 (defvar hledger-empty-regex "^\\s-*$"
@@ -53,8 +53,14 @@
   "Regular expression for dates for font lock.")
 (defvar hledger-date-and-desc-regex (format "\\<%s\\s-*\\*?\\s-*[^[:space:]]+\\>" hledger-date-regex)
   "Regular expression for matching a starting entry with some description.")
-(defvar hledger-account-regex "\\(\\([Rr]evenues\\|[aA]ssets\\|[lL]iabilities\\|[Ee]quity\\|[Ee]xpenses\\|[iI]ncome\\|[Zz]adjustments\\)\\(:[A-Za-z--]+\\)+\\)"
+
+(defvar hledger-account-regex
+  (concat "\\(\\([Rr]evenues\\|[aA]ssets\\|[lL]iabilities"
+	  "\\|[Ee]quity\\|[Ee]xpenses\\|[iI]ncome\\|[Zz]adjustments\\)" ;; terms all accounts must start with
+	  "\\(:[A-Za-z0-9\-]+\\( [A-Za-z0-9\-]+\\)*\\)+\\)"             ;; allow multi-word account names
+	  )
   "Regular expression for a potential journal account.")
+
 (defvar hledger-whitespace-account-regex (format "\\s-*%s" hledger-account-regex)
   "Regular expression for an account with leading whitespace.")
 (defvar hledger-comment-regex "^[ \t]*;"
@@ -63,20 +69,15 @@
   "Regular expression to match a comment with no text.")
 (defvar hledger-amount-value-regex "[-]?[0-9]+\\(\\.[0-9]+\\)?"
   "Regular expression to match a floating point number.")
-(defvar hledger-amount-regex (format "\\<%s\\s-*[-]?[0-9]+\\(\\.[0-9]+\\)?\\>"
-                                     hledger-currency-string)
-  "Regular expression to match an inserted amount in rupees.")
-(defvar hledger-whitespace-amount-regex (format "\\s-*%s"
-                                                hledger-amount-regex)
-  "Regular expression for whitespace followed by amount.")
 
 (defun hledger-amount-regex ()
   "Regular expression to match an inserted amount in rupees."
-  (format "\\<%s\\s-*[-]?[0-9]+\\(\\.[0-9]+\\)?\\>" hledger-currency-string))
+  (format "\\<%s\\s-*[-]?[0-9,]+\\(\\.[0-9]+\\)?\\>" hledger-currency-string))
 
 (defun hledger-whitespace-amount-regex ()
   "Regular expression for whitespace followed by amount."
-  (format "\\s-*%s" hledger-amount-regex))
+  (format "\\s-*%s" (format "\\<%s\\s-*[-]?[0-9]+\\(\\.[0-9]+\\)?\\>"
+                                     hledger-currency-string)))
 
 ;;; Indentation
 (defun hledger-line-matchesp (re offset)
@@ -211,6 +212,7 @@ interactively editing an entry."
        ((hledger-cur-starts-with-semicolp) (indent-line-to hledger-comments-column))
        ((hledger-cur-has-accp) (indent-line-to tab-width)))
       (forward-line 1))))
+
 
 (provide 'hledger-core)
 ;;; hledger-core.el ends here

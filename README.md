@@ -186,6 +186,14 @@ you are away from computer. You can use the command
 `hledger-fetch-entries` later on to get those entries into your
 journal file.
 
+## Testing
+
+`hledger-mode` contains automated tests. You may run them by executing
+`cask exec ert-runner`.
+
+You may need to install `cask` locally if you do not already have it
+installed, and run `cask install` to install any dependencies that you
+may be missing.
 
 ## Contributing
 
