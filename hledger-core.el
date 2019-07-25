@@ -55,8 +55,8 @@
   "Regular expression for matching a starting entry with some description.")
 
 (defvar hledger-account-regex
-  (concat "\\(\\([Rr]evenues\\|[aA]ssets\\|[lL]iabilities"
-	  "\\|[Ee]quity\\|[Ee]xpenses\\|[iI]ncome\\|[Zz]adjustments\\)" ;; terms all accounts must start with
+  (concat "\\(\\([Rr]evenues?\\|[aA]ssets?\\|[lL]iabilit\\(?:ies\\|y\\)"
+	  "\\|[Ee]quity\\|[Ee]xpenses?\\|[iI]ncomes?\\|[Zz]adjustments?\\)" ;; terms all accounts must start with
 	  "\\(:[A-Za-z0-9\-]+\\( [A-Za-z0-9\-]+\\)*\\)+\\)"             ;; allow multi-word account names
 	  )
   "Regular expression for a potential journal account.")
