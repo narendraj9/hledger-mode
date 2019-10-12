@@ -44,12 +44,12 @@
   :group 'hledger)
 
 (defcustom hledger-amount-face font-lock-constant-face
-  "Face for date."
+  "Face for amount."
   :type 'face
   :group 'hledger)
 
 (defcustom hledger-account-face font-lock-variable-name-face
-  "Face for date."
+  "Face for accounts."
   :type 'face
   :group 'hledger)
 
