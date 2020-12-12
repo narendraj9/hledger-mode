@@ -895,6 +895,12 @@ This is the reason dynamic scoping is cool sometimes."
                `(lambda () ',time))))
     (funcall command)))
 
+(defun hledger-day-to-relative (day)
+  "Return the number of days relative to today the given DAY represents."
+  (-
+   (time-to-days (date-to-time (concat day " 00:00:00")))
+   (time-to-days (current-time))))
+
 (defun hledger-run-command-for-month (m command)
   "Run *hledger* command for month M where COMMAND is a string."
   (hledger-run-fn-for-month m (lambda ()
@@ -960,28 +966,24 @@ This is the reason dynamic scoping is cool sometimes."
   "Takes your current report back in time.
 To be called once you have run a report that sets `hledger-last-run-command'."
   (interactive)
-  (setq hledger-last-run-time (1- hledger-last-run-time))
+  (hledger-report-at-day (1- hledger-last-run-time)))
+
+(defun hledger-next-report ()
+  "Takes your report forward in time.
+To be called once you have run a report that sets `hledger-last-run-command'."
+  (interactive)
+  (hledger-report-at-day (1+ hledger-last-run-time)))
+
+(defun hledger-report-at-day (day)
+  "Takes your current report at the given DAY relative to today.
+To be called once you have run a report that sets `hledger-last-run-command'."
+  (interactive (list (hledger-day-to-relative (org-read-date))))
+  (setq hledger-last-run-time day)
   (pcase hledger-last-run-command
     (`"daily" (hledger-run-command-for-day hledger-last-run-time
                                            hledger-last-run-command))
     (`"balancesheet" (hledger-run-command-for-day
                                            hledger-last-run-time
-                                           hledger-last-run-command))
-    (_ (hledger-run-command-for-month hledger-last-run-time
-                                      hledger-last-run-command)))
-  (pulse-momentary-highlight-region (point-min)
-                                    (point-max)
-                                    'next-error))
-
-(defun hledger-next-report ()
-  "Takes your report forward in time.
-See `hledger-prev-report'."
-  (interactive)
-  (setq hledger-last-run-time (1+ hledger-last-run-time))
-  (pcase hledger-last-run-command
-    (`"daily" (hledger-run-command-for-day hledger-last-run-time
-                                           hledger-last-run-command))
-    (`"balancesheet" (hledger-run-command-for-day hledger-last-run-time
                                            hledger-last-run-command))
     (_ (hledger-run-command-for-month hledger-last-run-time
                                       hledger-last-run-command)))
