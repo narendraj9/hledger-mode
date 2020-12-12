@@ -106,6 +106,7 @@ COMMAND, ARG and IGNORED the regular meanings."
     (define-key map (kbd "w") 'hledger-widen-results-for-register)
     (define-key map (kbd "<") 'hledger-prev-report)
     (define-key map (kbd ">") 'hledger-next-report)
+    (define-key map (kbd "D") 'hledger-report-at-day)
     (define-key map (kbd ".") 'hledger-present-report)
     (define-key map (kbd "o") (hledger-as-command hledger-overall-report*
                                                   "overall"))
