@@ -186,6 +186,12 @@ you are away from computer. You can use the command
 `hledger-fetch-entries` later on to get those entries into your
 journal file.
 
+If you want real-time checking of your journal, you might want to
+install
+[flycheck-hledger](https://github.com/DamienCassou/flycheck-hledger/):
+
+![flycheck-hledger](_assets/flycheck-hledger.png?raw=true "flycheck-hledger")
+
 ## Testing
 
 `hledger-mode` contains automated tests. You may run them by executing
