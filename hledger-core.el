@@ -72,12 +72,12 @@
 
 (defun hledger-amount-regex ()
   "Regular expression to match an inserted amount in rupees."
-  (format "\\<%s\\s-*[-]?[0-9,]+\\(\\.[0-9]+\\)?\\>" hledger-currency-string))
+  (format "\\<%s\\s-*[-]?[0-9,]+\\(\\.[0-9]+\\)?\\>" (regexp-quote hledger-currency-string)))
 
 (defun hledger-whitespace-amount-regex ()
   "Regular expression for whitespace followed by amount."
   (format "\\s-*%s" (format "\\<%s\\s-*[-]?[0-9]+\\(\\.[0-9]+\\)?\\>"
-                                     hledger-currency-string)))
+                                     (regexp-quote hledger-currency-string))))
 
 ;;; Indentation
 (defun hledger-line-matchesp (re offset)
@@ -123,7 +123,7 @@
   "Return true if the account line has an amount."
   (hledger-cur-line-matchesp (concat hledger-whitespace-account-regex
                                      (format "\\s-*%s\\s-*$"
-                                             hledger-currency-string))))
+                                             (regexp-quote hledger-currency-string)))))
 (defun hledger-expecting-rupeep ()
   "Return true if we should insert a rupee sign."
   (hledger-cur-line-matchesp (concat hledger-whitespace-account-regex

@@ -590,7 +590,7 @@ Optional argument END end date string for journal entries to consider."
                           (shell-quote-argument "\"%(account)\" %(total) "))))
          (elisp-string (concat "("
                                (replace-regexp-in-string
-                                (concat hledger-currency-string
+                                (concat (regexp-quote hledger-currency-string)
                                         "\\|-")
                                 ""
                                 output)

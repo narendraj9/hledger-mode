@@ -164,7 +164,7 @@ not balance at point."
           (goto-char end)
           (while (re-search-backward hledger-amount-regex beg t)
             (push (string-to-number (replace-regexp-in-string
-                                     hledger-currency-string
+                                     (regexp-quote hledger-currency-string)
                                      ""
                                      (match-string 0)))
                   amounts)))
