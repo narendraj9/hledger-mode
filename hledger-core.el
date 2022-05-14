@@ -51,7 +51,7 @@
   "Regular expression a line with date only.")
 (defvar hledger-date-regex "[0-9]\\{4\\}[-/][0-9]\\{2\\}[-/][0-9]\\{2\\}"
   "Regular expression for dates for font lock.")
-(defvar hledger-date-and-desc-regex (format "\\<%s\\s-*\\*?\\s-*[^[:space:]]+\\>" hledger-date-regex)
+(defvar hledger-date-and-desc-regex (format "\\<%s\\s-*[\\*!]?\\s-*[^[:space:]]+\\>" hledger-date-regex)
   "Regular expression for matching a starting entry with some description.")
 
 (defvar hledger-account-regex
