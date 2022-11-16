@@ -289,6 +289,7 @@ non-nil, it lands us in the `hledger-mode' ."
                               (delete-all-overlays))))
     jbuffer))
 
+;;;###autoload
 (defun hledger-run-command (command)
   "Run an hledger COMMAND."
   (interactive (list (completing-read "jdo> "
