@@ -125,7 +125,12 @@ COMMAND, ARG and IGNORED the regular meanings."
 (defun hledger-font-lock-keywords-1 ()
   "Minimal highlighting expressions for hledger mode."
   (list
-   `(,hledger-account-regex . hledger-account-face)
+   `(,(concat "^  +" hledger-account-regex) 1 hledger-account-face)
+   `(,(concat "^account " hledger-account-regex "$") 1 hledger-account-face)
+   `(,(concat "^alias \\([^[:space:]=;\n]+\\) = " hledger-account-regex "$")
+     (1 hledger-account-face)
+     (2 hledger-account-face))
+   `(,(concat "^payee " hledger-account-regex "$") 1 hledger-account-face)
    `(,hledger-date-regex . hledger-date-face)
    `(,(hledger-amount-regex) . hledger-amount-face)))
 
