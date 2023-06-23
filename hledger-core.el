@@ -57,7 +57,7 @@
 (defvar hledger-account-regex
   (concat "\\(\\([Rr]evenues?\\|[aA]ssets?\\|[lL]iabilit\\(?:ies\\|y\\)\\|[Dd]ebts?"
 	  "\\|[Ee]quity\\|[Ee]xpenses?\\|[iI]ncome\\|[Zz]adjustments?\\)" ;; terms all accounts must start with
-	  "\\(:[A-Za-z0-9\-]+\\( [A-Za-z0-9\-]+\\)*\\)*\\)"             ;; allow multi-word account names
+	  "\\(:\\([^[:space:];\n]+\\( [^[:space:];\n]+\\)*\\)\\)*\\)"             ;; allow multi-word account names
 	  )
   "Regular expression for a potential journal account.")
 
