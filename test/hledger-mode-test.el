@@ -16,9 +16,9 @@
   "Account name regex matches account name with a space"
   (should (equal (act-name-first-match "Revenues:Consulting Income") "Revenues:Consulting Income")))
 
-(ert-deftest ert-test-account-name-doesnt-include-amount ()
-  "Account name regex match does not include amount"
-  (should (equal (act-name-first-match "Revenues:Consulting Income $42.00") "Revenues:Consulting Income")))
+(ert-deftest ert-test-malformed-account-is-matched-fully ()
+  "Account name regex match does include amount when not correctly separated"
+  (should (equal (act-name-first-match "Revenues:Consulting Income $42.00") "Revenues:Consulting Income $42.00")))
 
 (ert-deftest ert-test-account-name-doesnt-match-if-starting-whitelist-not-matched ()
   "Account name regex match doesn't match if it does not start with a whitelisted word"
@@ -31,6 +31,16 @@
 (ert-deftest ert-test-account-name-nested ()
   "Account name may be nested more than one level"
   (should (equal (act-name-first-match "Revenues:Consulting Income:Haskell") "Revenues:Consulting Income:Haskell")))
+
+(ert-deftest ert-test-account-name-with-non-ascii-and-punctuation ()
+  "Account name regex matches account name with non-ASCII characters and punctuation"
+  (should (equal (act-name-first-match "Revenues:Consulting Income:Kö Pte. Ltd.") "Revenues:Consulting Income:Kö Pte. Ltd.")))
+
+(ert-deftest ert-test-account-name-doesnt-match-forbidden-characters ()
+  "Account name regex match stops at forbidden characters"
+  (let ((m (string-match hledger-account-regex "Revenues:Consulting Income:Company;Co")))
+    (should (= (match-beginning 0) 0))
+    (should (= (match-end 0) 34))))
 
 
 (setq hledger-currency-string "$")
