@@ -58,6 +58,10 @@
 	"\\(\\([^[:space:];\n]+\\(?: [^[:space:];=\n]+\\)*\\)\\)"
   "Regular expression for a potential journal account.")
 
+(defvar hledger-account-leading-regex
+  "/\\|\\(= \\)\\|\\(?:  \\)"
+  "Regular expression for places where an account name can begin.")
+
 (defvar hledger-whitespace-account-regex (format "\\s-*%s" hledger-account-regex)
   "Regular expression for an account with leading whitespace.")
 (defvar hledger-comment-regex "^[ \t]*;"

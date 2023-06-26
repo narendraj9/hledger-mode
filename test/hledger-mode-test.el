@@ -52,3 +52,34 @@
 (ert-deftest ert-test-amount-with-comma ()
   "Test amount matching containing a comma"
   (should (equal (first-amount-match "$4,000.00") "$4,000.00")))
+
+(ert-deftest ert-hledger-account-bounds-is-correct ()
+  (with-temp-buffer
+    (insert "alias save those spaces = expenses:payee with spaces
+
+2023-06-26 Payee | Description  ; comment
+  assets:bank:savings account  -INR 100
+  expenses:payee with spaces  INR 100")
+    (goto-char 0)
+    ;; in the middle of an account with spaces
+    (save-excursion
+      (search-forward "savings account")
+      (let* ((bounds (hledger-bounds-of-account-at-point))
+             (text (buffer-substring (car bounds) (cdr bounds))))
+        (should (string= text "assets:bank:savings account"))))
+    ;; in an amount
+    (save-excursion
+      (search-forward "-INR")
+      (let ((bounds (hledger-bounds-of-account-at-point)))
+        (should (null bounds))))
+    ;; in the description line
+    (save-excursion
+      (search-forward "Payee")
+      (let ((bounds (hledger-bounds-of-account-at-point)))
+        (should (null bounds))))
+    ;; in an alias value
+    (save-excursion
+      (search-forward "with spaces")
+      (let* ((bounds (hledger-bounds-of-account-at-point))
+             (text (buffer-substring (car bounds) (cdr bounds))))
+        (should (string= text "expenses:payee with spaces"))))))
