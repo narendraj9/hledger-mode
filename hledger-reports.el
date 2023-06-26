@@ -325,7 +325,7 @@ STRING can be multiple words separated by a space."
                                    hledger-jfile
                                    " accounts "
                                    (or string ""))))
-         (accounts-list (split-string accounts-string)))
+         (accounts-list (split-string accounts-string "\n")))
     accounts-list))
 
 (defun hledger-get-balances (accounts)
