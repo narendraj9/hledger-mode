@@ -158,7 +158,9 @@ COMMAND, ARG and IGNORED the regular meanings."
   (when hledger-enable-current-overlay
     (add-hook 'post-command-hook 'hledger-update-current-entry-overlay))
   ;; How can make this execute lazily?
-  (setq hledger-accounts-cache (hledger-get-accounts)))
+  (setq hledger-accounts-cache (hledger-get-accounts))
+  (add-to-list (make-local-variable 'completion-at-point-functions)
+               'hledger-completion-at-point))
 
 ;;;###autoload
 (define-derived-mode hledger-mode fundamental-mode "HLedger" ()

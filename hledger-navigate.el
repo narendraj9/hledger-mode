@@ -212,8 +212,10 @@ Optional argument SEP-REGEXP is the regular expression that separates things."
       (cons new-x (line-end-position)))))
 
 (defun hledger-bounds-of-account-at-point ()
-    "Return the bounds of an account name at point."
-  (hledger-bounds-of-thing-at-point hledger-account-regex))
+  "Return the bounds of an account name at point."
+  (let ((entry-bounds (hledger-bounds-of-current-entry)))
+    (when (thing-at-point-looking-at hledger-account-regex (- (cdr entry-bounds) (car entry-bounds)))
+      (cons (match-beginning 0) (match-end 0)))))
 
 (defun hledger-bounds-of-date-at-point ()
     "Return the bounds of date at point."
