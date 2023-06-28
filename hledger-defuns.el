@@ -342,10 +342,14 @@ looks ugly when it's small."
 (defun hledger-completion-at-point ()
   "Adding this for account name completions in `minibuffer'."
   (interactive)
-  (let* ((bounds (bounds-of-thing-at-point 'word))
-         (start (car bounds))
-         (end (cdr bounds)))
-    (list start end hledger-accounts-cache . nil)))
+  (let ((bounds
+         (or (bounds-of-thing-at-point 'hledger-account)
+             (bounds-of-thing-at-point 'symbol))))
+    (when bounds
+      (list (car bounds)
+            (cdr bounds)
+            hledger-accounts-cache
+            :exclusive 'no))))
 
 
 (provide 'hledger-defuns)
