@@ -53,6 +53,11 @@
   :type 'face
   :group 'hledger)
 
+(defcustom hledger-account-colon-face hledger-account-face
+  "Face for colons in accounts (signifying subheads)."
+  :type 'face
+  :group 'hledger)
+
 (defcustom hledger-description-face nil
   "Face for description text."
   :type 'face
@@ -125,14 +130,39 @@ COMMAND, ARG and IGNORED the regular meanings."
 (defun hledger-font-lock-keywords-1 ()
   "Minimal highlighting expressions for hledger mode."
   (list
-   `(,(concat "^  +" hledger-account-regex) 1 hledger-account-face)
-   `(,(concat "^account " hledger-account-regex "$") 1 hledger-account-face)
-   `(,(concat "^alias \\([^[:space:]=;\n]+\\) = " hledger-account-regex "$")
+   `(,(concat "^  +" hledger-account-regex) (1 hledger-account-face)
+     (hledger--fontify-account-colons (hledger--fontify-account-colons-pre) (hledger--fontify-account-colons-post) (0 hledger-account-colon-face t)))
+   `(,(concat "^account " hledger-account-regex "$") (1 hledger-account-face)
+     (hledger--fontify-account-colons (hledger--fontify-account-colons-pre) (hledger--fontify-account-colons-post) (0 hledger-account-colon-face t)))
+   `(,(concat "^payee " hledger-account-regex "$") (1 hledger-account-face)
+     (hledger--fontify-account-colons (hledger--fontify-account-colons-pre) (hledger--fontify-account-colons-post) (0 hledger-account-colon-face t)))
+   `(,(concat "^alias \\([^=;\n]+\\) = " hledger-account-regex "$")
      (1 hledger-account-face)
-     (2 hledger-account-face))
-   `(,(concat "^payee " hledger-account-regex "$") 1 hledger-account-face)
+     (2 hledger-account-face)
+     (":"
+      ;; This line can only contain the alias and the definition, so
+      ;; all colons are significant.
+      (beginning-of-line)
+      (end-of-line)
+      (0 hledger-account-colon-face t)))
    `(,hledger-date-regex . hledger-date-face)
    `(,(hledger-amount-regex) . hledger-amount-face)))
+
+(defun hledger--fontify-account-colons-pre ()
+  "Prepare to fontify colons inside an account."
+  (let ((begin (previous-single-property-change (point) 'face nil (point-at-bol))))
+    (goto-char begin)))
+
+(defun hledger--fontify-account-colons-post ()
+  "Restore state after fontifying colons inside an account."
+  (let ((end (next-single-property-change (point) 'face nil (point-at-eol))))
+    (goto-char end)))
+
+(defun hledger--fontify-account-colons (bound)
+  "Fontify colons up to the next change in face or the end of the line."
+  (let ((bound (1- (next-single-property-change (point) 'face nil (point-at-eol)))))
+    (when (search-forward ":" bound t)
+      t)))
 
 (defun hledger-font-lock-defaults ()
   "Default highlighting expressions for hledger mode."

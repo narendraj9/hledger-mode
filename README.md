@@ -42,6 +42,14 @@ to your Emacs add it to `load-path`.
     (lambda ()
         (setq-local ac-sources '(hledger-ac-source))))
 
+;; To make colons in account names stand out,
+(defface hledger-account-colon-face
+    '((t :inherit font-lock-variable-name-face
+         :weight bold))
+    "Face for hledger account colons (signifying subheads)."
+    :group 'hledger)
+
+(setq hledger-account-colon-face 'hledger-account-colon-face)
 ```
 
 ## Configuration
