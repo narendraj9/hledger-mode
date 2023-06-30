@@ -53,13 +53,15 @@
   "Test amount matching containing a comma"
   (should (equal (first-amount-match "$4,000.00") "$4,000.00")))
 
+(defconst hledger--ert-test-input "alias save:those spaces = expenses:payee with spaces
+
+2023-06-26 Payee | Description: Details  ; comment
+  assets:bank:savings account  -INR 100  ; tag:value
+  expenses:payee with spaces  INR 100")
+
 (ert-deftest ert-hledger-account-bounds-is-correct ()
   (with-temp-buffer
-    (insert "alias save those spaces = expenses:payee with spaces
-
-2023-06-26 Payee | Description  ; comment
-  assets:bank:savings account  -INR 100
-  expenses:payee with spaces  INR 100")
+    (insert hledger--ert-test-input)
     (goto-char 0)
     ;; in the middle of an account with spaces
     (save-excursion
@@ -83,3 +85,63 @@
       (let* ((bounds (hledger-bounds-of-account-at-point))
              (text (buffer-substring (car bounds) (cdr bounds))))
         (should (string= text "expenses:payee with spaces"))))))
+
+(ert-deftest ert-hledger-fontification-is-correct ()
+  ;; Patterned after `groovy-mode': https://emacs.stackexchange.com/a/46902/19248
+  (with-temp-buffer
+    (insert hledger--ert-test-input)
+    (goto-char 0)
+    (delay-mode-hooks (hledger-mode))
+    (if (fboundp 'font-lock-ensure)
+        (font-lock-ensure)
+      (with-no-warnings
+        (font-lock-fontify-buffer)))
+    (should
+     (equal-including-properties
+      (buffer-string)
+      #("alias save:those spaces = expenses:payee with spaces\n\n2023-06-26 Payee | Description: Details  ; comment\n  assets:bank:savings account  -INR 100  ; tag:value\n  expenses:payee with spaces  INR 100" 6 10
+        (face font-lock-variable-name-face)
+        10 11
+        (face hledger-account-colon-face)
+        11 23
+        (face font-lock-variable-name-face)
+        26 34
+        (face font-lock-variable-name-face)
+        34 35
+        (face hledger-account-colon-face)
+        35 52
+        (face font-lock-variable-name-face)
+        54 64
+        (face hledger-date-face)
+        95 97
+        (face font-lock-comment-delimiter-face)
+        97 105
+        (face font-lock-comment-face)
+        107 113
+        (face font-lock-variable-name-face)
+        113 114
+        (face hledger-account-colon-face)
+        114 118
+        (face font-lock-variable-name-face)
+        118 119
+        (face hledger-account-colon-face)
+        119 134
+        (face font-lock-variable-name-face)
+        137 144
+        (face font-lock-constant-face)
+        146 148
+        (face font-lock-comment-delimiter-face)
+        148 151
+        (face font-lock-comment-face)
+        151 152
+        (face font-lock-comment-face)
+        152 158
+        (face font-lock-comment-face)
+        160 168
+        (face font-lock-variable-name-face)
+        168 169
+        (face hledger-account-colon-face)
+        169 186
+        (face font-lock-variable-name-face)
+        188 195
+        (face font-lock-constant-face))))))
