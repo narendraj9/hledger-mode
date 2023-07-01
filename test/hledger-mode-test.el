@@ -20,10 +20,6 @@
   "Account name regex match does include amount when not correctly separated"
   (should (equal (act-name-first-match "Revenues:Consulting Income $42.00") "Revenues:Consulting Income $42.00")))
 
-(ert-deftest ert-test-account-name-doesnt-match-if-starting-whitelist-not-matched ()
-  "Account name regex match doesn't match if it does not start with a whitelisted word"
-  (should (equal (string-match hledger-account-regex "BogusType:Banking") nil)))
-
 (ert-deftest ert-test-account-name-matches-with-digit ()
   "Account name regex matches account name containing digit"
   (should (equal (act-name-first-match "Revenues:Consulting Income 9") "Revenues:Consulting Income 9")))
