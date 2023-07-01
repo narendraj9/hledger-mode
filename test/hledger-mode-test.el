@@ -55,7 +55,11 @@
 
 2023-06-26 Payee | Description  ; comment
   assets:bank:savings account  -INR 100
-  expenses:payee with spaces  INR 100")
+  expenses:payee with spaces  INR 100
+
+2023-06-27 Description
+  assets:bank:savings account  -$50
+  expenses:personal  $50")
     (goto-char 0)
     ;; in the middle of an account with spaces
     (save-excursion
@@ -66,6 +70,19 @@
     ;; in an amount
     (save-excursion
       (search-forward "-INR")
+      (let ((bounds (hledger-bounds-of-account-at-point)))
+        (should (null bounds))))
+    ;; in a different amount
+    (save-excursion
+      (search-forward "$")
+      (let ((bounds (hledger-bounds-of-account-at-point)))
+        (should (null bounds))))
+    (save-excursion
+      (search-forward "-$5")
+      (let ((bounds (hledger-bounds-of-account-at-point)))
+        (should (null bounds))))
+    (save-excursion
+      (search-forward " $5")
       (let ((bounds (hledger-bounds-of-account-at-point)))
         (should (null bounds))))
     ;; in the description line
