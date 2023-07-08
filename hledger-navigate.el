@@ -120,12 +120,22 @@ subtract when `days 'is negative)."
     (let* ((date (match-string 0))
            (end (match-end 0))
            (parsed (iso8601-parse (concat date "T00:00:00Z")))
-           (new-date (encode-time (decoded-time-add parsed (make-decoded-time :day days)))))
+           (new-date (encode-time (decoded-time-add parsed (make-decoded-time :day (floor days))))))
       (delete-region (line-beginning-position)
                      end)
       (insert (format-time-string "%Y-%m-%d" new-date))
       (pulse-momentary-highlight-region (line-beginning-position)
                                         (line-end-position)))))
+
+(defun hledger-increment-entry-date ()
+  "Add one day to the date of the entry at point."
+  (interactive)
+  (hledger-add-days-to-entry-date 1))
+
+(defun hledger-decrement-entry-date ()
+  "Decrement one day from the date of the entry at point."
+  (interactive)
+  (hledger-add-days-to-entry-date -1))
 
 (defun hledger-go-to-starting-line ()
   "Function to go the first line that stars a new entry.  Cleans up whitespace."
