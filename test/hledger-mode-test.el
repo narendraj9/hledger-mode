@@ -96,3 +96,12 @@
       (let* ((bounds (hledger-bounds-of-account-at-point))
              (text (buffer-substring (car bounds) (cdr bounds))))
         (should (string= text "expenses:payee with spaces"))))))
+
+(ert-deftest hledger-date-manipulation-works ()
+  (with-temp-buffer
+    (insert "2023-07-08")
+    (backward-char)
+    (hledger-add-days-to-entry-date 1)
+    (should (string= (buffer-substring-no-properties (point-min) (point-max)) "2023-07-09"))
+    (hledger-add-days-to-entry-date -2)
+    (should (string= (buffer-substring-no-properties (point-min) (point-max)) "2023-07-07"))))
