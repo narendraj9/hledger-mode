@@ -42,6 +42,9 @@ to your Emacs add it to `load-path`.
     (lambda ()
         (setq-local ac-sources '(hledger-ac-source))))
 
+;; For easily adjusting dates.
+(define-key hledger-mode-map (kbd "<kp-add>") 'hledger-increment-entry-date)
+(define-key hledger-mode-map (kbd "<kp-subtract>") 'hledger-decrement-entry-date)
 ```
 
 ## Configuration
