@@ -58,11 +58,15 @@
   :type 'face
   :group 'hledger)
 
-(defcustom hledger-update-accounts-idle-delay 0.3
+(defcustom hledger-update-accounts-idle-delay 1
   "Update accounts in file when Emacs has been idle for this many seconds.")
 
 (defvar hledger-accounts-cache nil
   "List of accounts cached for ac and company modes.")
+
+(defvar hledger-must-update-accounts nil
+  "Flag indicating that the list of accounts has potentially changed
+and must be recomputed. For internal use.")
 
 (defvar hledger-ac-source
   `((init . hledger-get-accounts)
@@ -168,6 +172,7 @@ COMMAND, ARG and IGNORED the regular meanings."
             (lambda () (cancel-timer hledger-update-accounts-timer))
             nil
             t)
+  (add-hook 'after-save-hook 'hledger-must-update-accounts nil t)
   (add-to-list (make-local-variable 'completion-at-point-functions)
                'hledger-completion-at-point))
 

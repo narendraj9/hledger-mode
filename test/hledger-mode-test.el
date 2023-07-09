@@ -112,3 +112,38 @@
     (hledger-decrement-entry-date)
     (hledger-decrement-entry-date)
     (should (string= (buffer-substring-no-properties (point-min) (point-max)) "2023-07-08"))))
+
+(defconst hledger-accounts-should-update-1
+  "account account1
+account account2
+
+2023-07-10 Transaction
+  account1  $5
+  account3")
+
+(defconst hledger-accounts-should-update-2
+  "
+alias account4 = account3
+
+2023-07-11 Transaction 2
+  account4  $10
+  account5  -$10")
+
+(ert-deftest hledger-accounts-should-update ()
+  (let* ((file-name (make-temp-file "emacs-hledger-test-" nil nil hledger-accounts-should-update-1))
+         (buf (find-file-noselect file-name t))
+         (hledger-jfile file-name))
+    (unwind-protect
+        (with-current-buffer buf
+          (hledger-mode)
+          (should (equal hledger-accounts-cache '("account1" "account2" "account3")))
+          (goto-char (point-max))
+          (insert hledger-accounts-should-update-2)
+          (should (equal hledger-accounts-cache '("account1" "account2" "account3")))
+          (save-buffer)
+          (should (equal hledger-accounts-cache '("account1" "account2" "account3")))
+          (hledger-completion-at-point)
+          (should (equal hledger-accounts-cache '("account1" "account2" "account3" "account5"))))
+      (with-current-buffer buf
+        (set-buffer-modified-p nil)
+        (kill-buffer buf)))))

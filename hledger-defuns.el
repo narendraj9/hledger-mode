@@ -340,15 +340,23 @@ looks ugly when it's small."
                  " "))))
 
 (defun hledger-update-accounts (&optional buffer)
-  "Update `hledger-accounts-cache'. Will do nothing
+  "Update `hledger-accounts-cache' and unset
+`hledger-must-update-accounts'. Will do nothing
 if `buffer' is passed but inactive."
   (when (or (null buffer)
             (eql (current-buffer) buffer))
-    (setq hledger-accounts-cache (hledger-get-accounts))))
+    (setq hledger-accounts-cache (hledger-get-accounts)
+          hledger-must-update-accounts nil)))
+
+(defun hledger-must-update-accounts ()
+  "Set the `hledger-must-update-accounts' flag to `t'."
+  (setq hledger-must-update-accounts t))
 
 (defun hledger-completion-at-point ()
   "Adding this for account name completions in `minibuffer'."
   (interactive)
+  (when hledger-must-update-accounts
+    (hledger-update-accounts))
   (let ((bounds
          (or (bounds-of-thing-at-point 'hledger-account)
              (bounds-of-thing-at-point 'symbol))))
