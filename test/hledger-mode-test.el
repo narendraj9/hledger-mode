@@ -139,8 +139,9 @@ alias account4 = account3
           (should (equal hledger-accounts-cache '("account1" "account2" "account3")))
           (goto-char (point-max))
           (insert hledger-accounts-should-update-2)
-          (should (equal hledger-accounts-cache '("account1" "account2" "account3")))
-          (save-buffer)
+          ;; A bit of a hack to force an update.
+          (let ((this-command 'self-insert-command))
+            (run-hooks 'post-command-hook))
           (should (equal hledger-accounts-cache '("account1" "account2" "account3")))
           (hledger-completion-at-point)
           (should (equal hledger-accounts-cache '("account1" "account2" "account3" "account5"))))
