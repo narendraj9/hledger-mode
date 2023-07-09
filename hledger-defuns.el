@@ -339,6 +339,13 @@ looks ugly when it's small."
                           "")))
                  " "))))
 
+(defun hledger-update-accounts (&optional buffer)
+  "Update `hledger-accounts-cache'. Will do nothing
+if `buffer' is passed but inactive."
+  (when (or (null buffer)
+            (eql (current-buffer) buffer))
+    (setq hledger-accounts-cache (hledger-get-accounts))))
+
 (defun hledger-completion-at-point ()
   "Adding this for account name completions in `minibuffer'."
   (interactive)
