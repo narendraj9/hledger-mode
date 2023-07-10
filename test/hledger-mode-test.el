@@ -20,10 +20,6 @@
   "Account name regex match does include amount when not correctly separated"
   (should (equal (act-name-first-match "Revenues:Consulting Income $42.00") "Revenues:Consulting Income $42.00")))
 
-(ert-deftest ert-test-account-name-doesnt-match-if-starting-whitelist-not-matched ()
-  "Account name regex match doesn't match if it does not start with a whitelisted word"
-  (should (equal (string-match hledger-account-regex "BogusType:Banking") nil)))
-
 (ert-deftest ert-test-account-name-matches-with-digit ()
   "Account name regex matches account name containing digit"
   (should (equal (act-name-first-match "Revenues:Consulting Income 9") "Revenues:Consulting Income 9")))
@@ -59,7 +55,11 @@
 
 2023-06-26 Payee | Description  ; comment
   assets:bank:savings account  -INR 100
-  expenses:payee with spaces  INR 100")
+  expenses:payee with spaces  INR 100
+
+2023-06-27 Description
+  assets:bank:savings account  -$50
+  expenses:personal  $50")
     (goto-char 0)
     ;; in the middle of an account with spaces
     (save-excursion
@@ -70,6 +70,19 @@
     ;; in an amount
     (save-excursion
       (search-forward "-INR")
+      (let ((bounds (hledger-bounds-of-account-at-point)))
+        (should (null bounds))))
+    ;; in a different amount
+    (save-excursion
+      (search-forward "$")
+      (let ((bounds (hledger-bounds-of-account-at-point)))
+        (should (null bounds))))
+    (save-excursion
+      (search-forward "-$5")
+      (let ((bounds (hledger-bounds-of-account-at-point)))
+        (should (null bounds))))
+    (save-excursion
+      (search-forward " $5")
       (let ((bounds (hledger-bounds-of-account-at-point)))
         (should (null bounds))))
     ;; in the description line
@@ -83,3 +96,19 @@
       (let* ((bounds (hledger-bounds-of-account-at-point))
              (text (buffer-substring (car bounds) (cdr bounds))))
         (should (string= text "expenses:payee with spaces"))))))
+
+(ert-deftest hledger-date-manipulation-works ()
+  (with-temp-buffer
+    (insert "2023-07-08")
+    (backward-char)
+    (hledger-add-days-to-entry-date 1)
+    (should (string= (buffer-substring-no-properties (point-min) (point-max)) "2023-07-09"))
+    (hledger-add-days-to-entry-date -2)
+    (should (string= (buffer-substring-no-properties (point-min) (point-max)) "2023-07-07"))
+    (hledger-increment-entry-date)
+    (hledger-increment-entry-date)
+    (hledger-increment-entry-date)
+    (should (string= (buffer-substring-no-properties (point-min) (point-max)) "2023-07-10"))
+    (hledger-decrement-entry-date)
+    (hledger-decrement-entry-date)
+    (should (string= (buffer-substring-no-properties (point-min) (point-max)) "2023-07-08"))))

@@ -109,6 +109,34 @@ Note: This function uses `org-read-date'."
       (pulse-momentary-highlight-region (line-beginning-position)
                                         (line-end-position)))))
 
+(defun hledger-add-days-to-entry-date (days)
+  "Add a number of days to the date of the entry at point (or
+subtract when `days 'is negative)."
+  (interactive "nDays to add (negative number to subtract): ")
+  (save-excursion
+    (forward-line 0)
+    (when (not (looking-at hledger-date-regex))
+      (search-backward-regexp hledger-date-regex))
+    (let* ((date (match-string 0))
+           (end (match-end 0))
+           (parsed (iso8601-parse (concat date "T00:00:00Z")))
+           (new-date (encode-time (decoded-time-add parsed (make-decoded-time :day (floor days))))))
+      (delete-region (line-beginning-position)
+                     end)
+      (insert (format-time-string "%Y-%m-%d" new-date))
+      (pulse-momentary-highlight-region (line-beginning-position)
+                                        (line-end-position)))))
+
+(defun hledger-increment-entry-date ()
+  "Add one day to the date of the entry at point."
+  (interactive)
+  (hledger-add-days-to-entry-date 1))
+
+(defun hledger-decrement-entry-date ()
+  "Decrement one day from the date of the entry at point."
+  (interactive)
+  (hledger-add-days-to-entry-date -1))
+
 (defun hledger-go-to-starting-line ()
   "Function to go the first line that stars a new entry.  Cleans up whitespace."
   (goto-char (point-max))
