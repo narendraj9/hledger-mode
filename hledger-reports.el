@@ -317,16 +317,23 @@ non-nil, it lands us in the `hledger-mode' ."
                                     (point-max)
                                     'next-error))
 
-(defun hledger-get-accounts (&optional string)
+(defun hledger-get-accounts (&optional string buffer)
   "Return list of account names with STRING infix present.
 STRING can be multiple words separated by a space."
-  (let* ((accounts-string (shell-command-to-string
-                           (concat "hledger -f"
-                                   hledger-jfile
-                                   " accounts "
-                                   (or string ""))))
-         (accounts-list (split-string accounts-string "\n")))
-    accounts-list))
+  (let* ((dest-buffer (make-temp-name "hledger-output-"))
+         (constant-args (list "-I" "-f" (if buffer "-" hledger-jfile) "accounts"))
+         (full-args (if (null string)
+                        constant-args
+                      (append constant-args (list string))))
+         (exit-code (if buffer
+                        (with-current-buffer buffer
+                          (apply #'call-process-region nil nil "hledger" nil dest-buffer nil full-args))
+                      (apply #'call-process "hledger" nil dest-buffer nil full-args)))
+         (output (string-trim-right (with-current-buffer dest-buffer
+                                      (buffer-string)))))
+    (kill-buffer dest-buffer)
+    (when (= exit-code 0)
+      (split-string output "\n"))))
 
 (defun hledger-get-balances (accounts)
   "Return balances for the sequence of ACCOUNTS."

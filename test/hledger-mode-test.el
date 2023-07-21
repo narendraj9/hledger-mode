@@ -112,3 +112,98 @@
     (hledger-decrement-entry-date)
     (hledger-decrement-entry-date)
     (should (string= (buffer-substring-no-properties (point-min) (point-max)) "2023-07-08"))))
+
+(defconst hledger-accounts-should-update-1
+  "account account1
+account account2
+
+2023-07-10 Transaction
+  account1  $5
+  account3")
+
+(defconst hledger-accounts-should-update-2
+  "
+alias account4 = account3
+
+2023-07-11 Transaction 2
+  account4  $10
+  account5  -$10")
+
+(ert-deftest hledger-accounts-should-not-update ()
+  "With `hledger-invalidate-completions' set to `on-idle', saving or
+editing the buffer should not update the accounts cache."
+  (let* ((file-name (make-temp-file "emacs-hledger-test-" nil nil hledger-accounts-should-update-1))
+         (buf (find-file-noselect file-name t))
+         (hledger-jfile file-name)
+         (hledger-invalidate-completions '(on-idle)))
+    (unwind-protect
+        (with-current-buffer buf
+          (hledger-mode)
+          (should (equal hledger-accounts-cache '("account1" "account2" "account3")))
+          (goto-char (point-max))
+          (insert hledger-accounts-should-update-2)
+          ;; A bit of a hack to force an update.
+          (let ((this-command 'self-insert-command))
+            (run-hooks 'post-command-hook))
+          (hledger-completion-at-point)
+          (should (equal hledger-accounts-cache '("account1" "account2" "account3")))
+          (save-buffer)
+          (hledger-completion-at-point)
+          (should (equal hledger-accounts-cache '("account1" "account2" "account3"))))
+      (with-current-buffer buf
+        (set-buffer-modified-p nil)
+        (kill-buffer buf)
+        (ignore-errors (delete-file file-name))))))
+
+(ert-deftest hledger-accounts-should-update-on-save ()
+  "With `hledger-invalidate-completions' set to `(on-idle
+on-save)',editing should not update the accounts cache."
+  (let* ((file-name (make-temp-file "emacs-hledger-test-" nil nil hledger-accounts-should-update-1))
+         (buf (find-file-noselect file-name t))
+         (hledger-jfile file-name)
+         (hledger-invalidate-completions '(on-idle on-save)))
+    (unwind-protect
+        (with-current-buffer buf
+          (hledger-mode)
+          (should (equal hledger-accounts-cache '("account1" "account2" "account3")))
+          (goto-char (point-max))
+          (insert hledger-accounts-should-update-2)
+          ;; A bit of a hack to force an update.
+          (let ((this-command 'self-insert-command))
+            (run-hooks 'post-command-hook))
+          (hledger-completion-at-point)
+          (should (equal hledger-accounts-cache '("account1" "account2" "account3")))
+          (save-buffer)
+          (hledger-completion-at-point)
+          (should (equal hledger-accounts-cache '("account1" "account2" "account3" "account5"))))
+      (with-current-buffer buf
+        (set-buffer-modified-p nil)
+        (kill-buffer buf)
+        (ignore-errors (delete-file file-name))))))
+
+(ert-deftest hledger-accounts-should-update-on-edit ()
+  "With `hledger-invalidate-completions' set to `(on-idle
+on-edit)',saving should not update the accounts cache."
+  (let* ((file-name (make-temp-file "emacs-hledger-test-" nil nil hledger-accounts-should-update-1))
+         (buf (find-file-noselect file-name t))
+         (hledger-jfile file-name)
+         (hledger-invalidate-completions '(on-idle on-edit)))
+    (unwind-protect
+        (with-current-buffer buf
+          (hledger-mode)
+          (should (equal hledger-accounts-cache '("account1" "account2" "account3")))
+          (goto-char (point-max))
+          (insert hledger-accounts-should-update-2)
+          ;; A bit of a hack to force an update.
+          (let ((this-command 'self-insert-command))
+            (run-hooks 'post-command-hook))
+          (should (equal hledger-accounts-cache '("account1" "account2" "account3")))
+          (hledger-completion-at-point)
+          (should (equal hledger-accounts-cache '("account1" "account2" "account3" "account5")))
+          (save-buffer)
+          (hledger-completion-at-point)
+          (should (equal hledger-accounts-cache '("account1" "account2" "account3" "account5"))))
+      (with-current-buffer buf
+        (set-buffer-modified-p nil)
+        (kill-buffer buf)
+        (ignore-errors (delete-file file-name))))))

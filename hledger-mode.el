@@ -58,8 +58,24 @@
   :type 'face
   :group 'hledger)
 
+(defcustom hledger-refresh-completions-idle-delay 1
+  "Update completions in file when Emacs has been idle for this many seconds.")
+
+(defcustom hledger-invalidate-completions '()
+  "When to invalidate the data used for autocompletion. Apart
+from `on-idle', these events do not refresh the data but only set
+a flag for the next time completions are requested."
+  :type '(set (const :tag "When idle in the buffer" on-idle)
+              (const :tag "After saving" on-save)
+              (const :tag "After editing" on-edit))
+  :group 'hledger)
+
 (defvar hledger-accounts-cache nil
   "List of accounts cached for ac and company modes.")
+
+(defvar hledger-must-update-accounts nil
+  "Flag indicating that the list of accounts has potentially changed
+and must be recomputed. For internal use.")
 
 (defvar hledger-ac-source
   `((init . hledger-get-accounts)
@@ -157,8 +173,19 @@ COMMAND, ARG and IGNORED the regular meanings."
   ;; Make an overlay for current entry if enabled
   (when hledger-enable-current-overlay
     (add-hook 'post-command-hook 'hledger-update-current-entry-overlay))
-  ;; How can make this execute lazily?
-  (setq hledger-accounts-cache (hledger-get-accounts))
+  (hledger-update-accounts)
+  (when (memq 'on-idle hledger-invalidate-completions)
+    (setq-local hledger-update-accounts-timer
+                (run-with-idle-timer hledger-refresh-completions-idle-delay t
+                                     'hledger-update-accounts (current-buffer)))
+    (add-hook 'kill-buffer-hook
+              (lambda () (cancel-timer hledger-update-accounts-timer))
+              nil
+              t))
+  (when (memq 'on-edit hledger-invalidate-completions)
+    (add-hook 'post-command-hook 'hledger-maybe-update-accounts nil t))
+  (when (memq 'on-save hledger-invalidate-completions)
+    (add-hook 'after-save-hook 'hledger-must-update-cache nil t))
   (add-to-list (make-local-variable 'completion-at-point-functions)
                'hledger-completion-at-point))
 
@@ -178,8 +205,8 @@ highlighting in both kinds of buffers."
   :syntax-table hledger-mode-syntax-table
   (setq font-lock-defaults (hledger-font-lock-defaults))
   ;; Populate accounts cache if not already.
-  (or hledger-accounts-cache
-      (setq hledger-accounts-cache (hledger-get-accounts)))
+  (unless hledger-accounts-cache
+    (hledger-update-accounts))
   ;; Setting up font-lock for partial account names.  This is only to
   ;; make sure they have the right face in a tree-type report. Why?
   ;; Why not!?
