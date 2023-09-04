@@ -72,6 +72,22 @@
     (insert entries)
     (format "Fetched entries appended.")))
 
+(defun hledger-autosync--setup-file ()
+  "Set up the current hledger file."
+  (when (eq major-mode 'hledger-mode)
+    (hledger-update-accounts)))
+
+(define-minor-mode hledger-autosync-mode
+  "Global minor mode for auto-syncing hledger files."
+  :global t
+  :init-value nil
+  (cond
+   (hledger-autosync-mode
+    (add-hook 'find-file-hook #'hledger-autosync--setup-file))
+   (t
+    (remove-hook 'find-file-hook #'hledger-autosync--setup-file))))
+
+
 (defmacro hledger-as-command (name command)
   "Define a function named NAME for hledger COMMAND."
   `(defun ,(intern (symbol-name name)) () (interactive)
@@ -340,6 +356,7 @@ looks ugly when it's small."
                  " "))))
 
 (defun hledger-update-accounts (&optional buffer)
+  (interactive)
   "Update `hledger-accounts-cache' (optionally using `buffer' as
 input) and unset `hledger-must-update-accounts'. Will do nothing
 if `buffer' is passed but inactive."
