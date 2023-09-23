@@ -185,7 +185,7 @@ COMMAND, ARG and IGNORED the regular meanings."
   (when (memq 'on-edit hledger-invalidate-completions)
     (add-hook 'post-command-hook 'hledger-maybe-update-accounts nil t))
   (when (memq 'on-save hledger-invalidate-completions)
-    (add-hook 'after-save-hook 'hledger-must-update-cache nil t))
+    (add-hook 'after-save-hook 'hledger-must-update-accounts nil t))
   (add-to-list (make-local-variable 'completion-at-point-functions)
                'hledger-completion-at-point))
 
