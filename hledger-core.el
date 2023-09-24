@@ -131,39 +131,39 @@
                                      "\\s-*$")))
 
 (defun hledger-cur-line-emptyp ()
-  "Return true if current line is empty."
+  "Return true if the current line is empty."
   (hledger-cur-line-matchesp hledger-empty-regex))
 (defun hledger-cur-has-datep ()
-  "Return true if current line has only date."
+  "Return true if the current line only has a date."
   (hledger-cur-line-matchesp hledger-date-only-regex))
 (defun hledger-cur-has-date-and-descp ()
-    "Return tru if current line had date and description."
+  "Return true if the current line has a date and description."
   (hledger-cur-line-matchesp hledger-date-and-desc-regex))
 (defun hledger-cur-has-empty-commentp ()
-  "Return true if current line has an empty comment.  Empty comments."
+  "Return true if the current line has an empty comment."
   (hledger-cur-line-matchesp hledger-empty-comment-regex))
 (defun hledger-cur-has-accp ()
   "Return true if the current line has an account name."
   (hledger-cur-line-matchesp hledger-whitespace-account-regex))
 (defun hledger-cur-starts-with-semicolp ()
-  "Return true if the current line has a semicolon in the beginning."
+  "Return true if the current line begins with a semicolon."
   (hledger-cur-line-matchesp hledger-comment-regex))
 
 (defun hledger-prev-line-emptyp ()
-  "Return true if previous line is empty."
+  "Return true if the previous line is empty."
   (hledger-prev-line-matchesp hledger-empty-regex))
 (defun hledger-prev-has-datep ()
-  "Return true if previous line has date and description."
+  "Return true if the previous line has a date and description."
   (hledger-prev-line-matchesp hledger-date-and-desc-regex))
 (defun hledger-prev-has-commentp ()
-  "Return true if previousl line has an empty comment.  Empty or otherwise."
+  "Return true if the previous line has a comment, even if the comment is empty."
   (hledger-prev-line-matchesp hledger-comment-regex))
 (defun hledger-prev-has-accp ()
   "Return true if the previous line has an account name."
   (hledger-prev-line-matchesp hledger-whitespace-account-regex))
 
 (defun hledger-indent-empty-line ()
-  "Called when the line to be indented is an empty one."
+  "Called when the line to be indented is empty."
   (cond
    ((hledger-prev-line-emptyp)   (hledger-insert-date))
    ((hledger-prev-has-datep) (if (= (current-indentation) tab-width)
@@ -175,11 +175,11 @@
     (indent-line-to tab-width))))
 
 (defun hledger-indent-date-line ()
-  "Called when current line has only a date in the beginning."
+  "Called when the current line only has a date."
   (hledger-delete-cur-line))
 
 (defun hledger-indent-comment-line ()
-  "Called when current line has an empty comment already."
+  "Called when the current line has an empty comment already."
   (if (not (hledger-cur-has-empty-commentp))
       (indent-line-to hledger-comments-column)
     (hledger-delete-cur-line)
