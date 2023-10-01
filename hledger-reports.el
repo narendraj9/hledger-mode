@@ -59,7 +59,7 @@
   :type 'string)
 
 (defcustom hledger-top-income-account "income"
-  "Top level expense account."
+  "Top level income account."
   :group 'hledger
   :type 'string)
 
@@ -117,7 +117,7 @@ I taint entries with a star, to declare that they haven't been effective yet."
 
 (defcustom hledger-ratios-essential-expense-accounts
   "expenses:housing expenses:eating expenses:family"
-  "Account names [separated by spaces] that contain non-disctrionary expenses."
+  "Account names [separated by spaces] that contain non-discretionary expenses."
   :group 'hledger
   :type 'string)
 
@@ -236,7 +236,7 @@ time."
       (hledger-nth-of-this-month hledger-reporting-day))))
 
 (defun hledger-status (command-string)
-  "Return the result of running COMMAND-STRING has an hledger command.
+  "Return the result of running COMMAND-STRING as a hledger command.
 
 If the command failed, returns a cons with the error status and
 the output to `standard-error' and `standard-output'."
@@ -512,11 +512,11 @@ Optional argument HIDE-HEADER-P if non-nil, header line showing duration isn't s
 (defun hledger-running-report (&optional keep-bufferp bury-bufferp)
   "Show the balance report for the past 5 months.
 
-Optional argument KEEP-BUFFERP if non-nil, the reporting buffer's
+If optional argument KEEP-BUFFERP is non-nil, the reporting buffer's
 old contents are kept intact.
 
-Optional argument BURY-BUFFERP if non-nil, the reporting buffer
-isn't switched to."
+If optional argument BURY-BUFFERP is non-nil, does not switch to
+the reporting buffer."
   (interactive)
   (let* ((beg-time-string
           (hledger-format-time (hledger-nth-of-mth-month
@@ -567,14 +567,14 @@ isn't switched to."
 
 
 (defun hledger-compute-last-reporting-time ()
-    "Return the time since when we are preparing the report."
+    "Return the elapsed time since the report was last prepared."
     (let ((day (string-to-number (format-time-string "%d"))))
       (if (> day hledger-reporting-day)
           (hledger-nth-of-this-month hledger-reporting-day)
         (hledger-nth-of-prev-month hledger-reporting-day))))
 
 
-(defun hledger-compute-total (accounts-string &optional beg  end)
+(defun hledger-compute-total (accounts-string &optional beg end)
   "Computes the total for given accounts in ACCOUNTS-STRING.
 This function depends upon how `hledger-bin' prints data to the console.
 If that changes, things will break.  BEG and END are dates."
@@ -584,9 +584,9 @@ If that changes, things will break.  BEG and END are dates."
 
 (defun hledger-compute-totals (accounts-list &optional beg end)
   "Computes the total for a list of accounts in ACCOUNTS-LIST.
-sSee `hledger-compute-total'.
-Optional argument BEG beginning date string for journal entries to consider.
-Optional argument END end date string for journal entries to consider."
+See `hledger-compute-total'.
+Optional argument BEG is the --begin date string for journal entries.
+Optional argument END is the --end date string for journal entries."
   (let* ((date-now (hledger-end-date (current-time)))
          (output (hledger-shell-command-to-string
                   (concat " balance "
@@ -608,7 +608,7 @@ Optional argument END end date string for journal entries to consider."
 
 (defun hledger-compute-years-to-retirement* (spending-ratio)
   "Given SPENDING-RATIO, find number of years to retirement.
-Configure `hledger-life-expectany' and `hledger-year-of-birth'.
+Configure `hledger-life-expectancy' and `hledger-year-of-birth' first.
 
 SPENDING-RATIO = 1 - savings-ratio
 
@@ -645,7 +645,7 @@ Debt ratio = liabilities / assets
 
 Returns a plist of the ratios.
 
-Note: Currently this is extermely inefficient.  It spawns hledger
+Note: Currently this is extremely inefficient.  It spawns hledger
 three times."
   (interactive)
   (let* ((reporting-date-an-year-ago (hledger-format-time (hledger-nth-of-mth-month
@@ -730,8 +730,7 @@ Optional parameter WIDTH decides the maximum width of a line."
 
 (defun hledger-compound-money (init periods periodic-rate)
   "Compound INIT amount for PERIODS units at PERIODIC-RATE.
-
-PERIODIC-RATE is in % and hence must be divided by 100."
+PERIODIC-RATE is a percentage."
   (* (or init 0)
      (expt (+ 1 (/ periodic-rate 100.0)) periods)))
 
@@ -740,7 +739,7 @@ PERIODIC-RATE is in % and hence must be divided by 100."
                                             &optional initial-sum)
   "Total savings with interest for MONTHLY-SAVINGS in N months.
 
-I live in India where bank do compounding quarterly with an
+I live in India, where banks do compounding quarterly with an
 interest rate of 4.0% per year.  Configure
 `hledger-extrapolate-savings-rate' and
 `hledger-extrapolate-savings-period' accordingly.
@@ -885,8 +884,8 @@ earn interest on this amount as well."
       (message "Done!"))))
 
 (defun hledger-run-fn-for-month (m command)
-  "Run for Mth month, hledger command string COMMAND.
-This is the reason dynamic scoping is cool sometimes."
+  "Run for Mth month, hledger command string COMMAND."
+  ;; This is the reason dynamic scoping is cool sometimes.
   (cl-letf (((symbol-function 'current-time)
              (let ((time (hledger-nth-of-mth-month
                           hledger-reporting-day
@@ -1004,7 +1003,6 @@ To be called once you have run a report that sets `hledger-last-run-command'."
   (interactive)
   (let ((hledger-last-run-time (1+ hledger-last-run-time)))
     (hledger-prev-report)))
-
 
 (defun hledger-report-ending-today ()
   "Refresh report showing balances till today.

@@ -2,13 +2,17 @@
 
 [![MELPA](https://melpa.org/packages/hledger-mode-badge.svg)](https://melpa.org/#/hledger-mode)
 
-A mode for writing hledger journals with a set of useful reports.
+An Emacs major mode for writing [hledger](https://hledger.org/) journals and
+generating useful accounting reports.
 
 ![Sample Reports](_assets/new_demo.gif?raw=true "Reports")
 
 ## Installation
 
-It's available on [MELPA](http://melpa.org/):
+The external `hledger` program should be installed first, or most of the report
+features won't work.
+
+This package is available on [MELPA](http://melpa.org/):
 
     M-x package-install hledger-mode
 
@@ -16,7 +20,6 @@ If you are not installing from Melpa, to make `hledger-mode` available
 to your Emacs add it to `load-path`.
 
     (add-to-list 'load-path "/path/to/hledger-mode/dir/")
-
 
 ## Setup
 
@@ -30,7 +33,6 @@ to your Emacs add it to `load-path`.
 ;; Provide the path to you journal file.
 ;; The default location is too opinionated.
 (setq hledger-jfile "/path/to/your/journal-file.journal")
-
 
 ;;; Auto-completion for account names
 ;; For company-mode users,
@@ -54,7 +56,6 @@ computing ratios in the overall report, `M-x customize-group` and
 customize the `hledger` group. For example, the Emergency Fund Ratio
 is computed with expenses incurred in accounts listed in the variable
 `hledger-ratios-essential-expense-accounts`.
-
 
 ## Usage
 
@@ -84,7 +85,6 @@ Once you have done so, you can enable monthly email reporting on
 (hledger-enable-reporting)
 
 ```
-
 
 Here is my configuration with `use-package' declarations:
 
