@@ -30,6 +30,7 @@
 
 (require 'hledger-core)
 (require 'pulse)
+(require 'parse-time)
 
 (defvar hledger-jentry-hook nil
   "Hook for `hledger-jentry'.")
